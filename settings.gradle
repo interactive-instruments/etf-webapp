@@ -1,2 +1,0 @@
-rootProject.name = 'etf-webapp'
-gradle.ext.set('ii.license.header', 'eupl-12-license-eu-ii-copy')

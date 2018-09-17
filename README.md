@@ -12,9 +12,7 @@ Please report issues [in the GitHub issue tracker](https://github.com/interactiv
 
 ETF component version numbers comply with the [Semantic Versioning Specification 2.0.0](http://semver.org/spec/v2.0.0.html).
 
-## Build information
 
-The project can be build and packaged as WAR file by running the gradlew.sh/.bat wrapper with:
-```gradle
-$ gradlew build war
-```
+## This is a fork
+
+This fork of the ETF component [etf-webapp](https://github.com/etf-validator/etf-webapp) is used by interactive instruments to implement and test new features before they are merged back into the master branch.
