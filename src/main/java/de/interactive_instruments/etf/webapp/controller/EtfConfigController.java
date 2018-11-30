@@ -482,9 +482,9 @@ public class EtfConfigController implements PropertyHolder {
 	private void updateTestDrivers() throws IOException {
 		final IFile tdDir = etfDir.expandPath(defaultProperties.get(ETF_TESTDRIVERS_DIR));
 		tdDir.mkdirs();
-		if(tdDir.secureExpandPathDown(".etf_do_not_touch_drivers").exists()) {
+		if (tdDir.secureExpandPathDown(".etf_do_not_touch_drivers").exists()) {
 			logger.debug("Drivers are not touched.");
-		}else{
+		} else {
 			final IFile.VersionedFileList latestDriverVersions = tdDir.getVersionedFilesInDir();
 			// Copy test drivers
 			final String tdDirName = "/testdrivers";

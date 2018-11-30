@@ -1,5 +1,4 @@
 define(['jquery'], function ($) {
-
     $(document).on("mobileinit",
         // Set up the "mobileinit" handler before requiring jQuery Mobile's module
         function () {
@@ -10,7 +9,6 @@ define(['jquery'], function ($) {
             $.mobile.hashListeningEnabled = false;
             $.mobile.pushStateEnabled = false;
             $.mobile.changePage.defaults.changeHash = false;
-
             $.mobile.autoInitializePage = false;
             $.mobile.page.prototype.options.domCache = false;
             $.mobile.page.prototype.options.degradeInputs.data = true;

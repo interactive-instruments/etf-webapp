@@ -48,7 +48,7 @@ require.config( {
             "lib/backbone.paginator.min"
         ],
         "moment": [
-            "https://cdn.jsdelivr.net/npm/moment@2.22.2/moment.min",
+            "https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment.min",
             "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min",
             "lib/momemt.min"
         ],
@@ -90,7 +90,7 @@ require.config( {
 
             'https://cdnjs.cloudflare.com/ajax/libs/backbone.paginator/2.0.5/backbone.paginator.min.js': 'sha256-nqCLeI27BiuRxhJEcsKPwUpTusAzME+5qFOWntHhAvy6',
 
-            'https://cdn.jsdelivr.net/npm/moment@2.22.2/moment.min.js': 'sha384-BmqX+J1qYayHgEkw+9Idtrl0B0TorHRQW9/iwTxk1samHGPmEI7ovnGvy4SbWxwa',
+            'https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment.min.js': 'sha384-sIzeKWIAHvT0Vm8QbfLCqZwBG0WMCkWVAOYd/330YSNeeQ1Y57N3T9lQz5Ry/EHH',
             'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js': 'sha384-KgEy7s3ThYKule8wWiu2WJkm0AmJeSLkXku5PY5X8MhVgdm8K1ebsVRKHfNfWPrR',
 
             'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min.js': 'sha256-yNbKY1y6h2rbVcQtf0b8lq4a+xpktyFc3pSYoGAY1qQ=',
