@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 European Union, interactive instruments GmbH
+ * Copyright 2017-2019 European Union, interactive instruments GmbH
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
  * You may not use this work except in compliance with the Licence.
@@ -26,15 +26,15 @@ import org.springframework.format.FormatterRegistry;
  * @author Jon Herrmann ( herrmann aT interactive-instruments doT de )
  */
 public class EtfFormatterRegistrar implements FormatterRegistrar {
-	@Override
-	public void registerFormatters(final FormatterRegistry registry) {
-		addConverter(registry, new EidConverter());
-		addConverter(registry, new VersionConverter());
-	}
+    @Override
+    public void registerFormatters(final FormatterRegistry registry) {
+        addConverter(registry, new EidConverter());
+        addConverter(registry, new VersionConverter());
+    }
 
-	private static void addConverter(final FormatterRegistry registry, final EtfConverter converter) {
-		registry.addConverter(converter.strToTypeConverter());
-		registry.addConverter(converter.typeToStrConverter());
-		registry.addFormatter(converter);
-	}
+    private static void addConverter(final FormatterRegistry registry, final EtfConverter converter) {
+        registry.addConverter(converter.strToTypeConverter());
+        registry.addConverter(converter.typeToStrConverter());
+        registry.addFormatter(converter);
+    }
 }

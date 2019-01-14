@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 European Union, interactive instruments GmbH
+ * Copyright 2017-2019 European Union, interactive instruments GmbH
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
  * You may not use this work except in compliance with the Licence.
@@ -25,17 +25,17 @@ import org.springframework.validation.Validator;
 
 public class TestRunValidator implements Validator {
 
-	@Override
-	public boolean supports(Class<?> clasz) {
-		// return TestRunDto.class.isAssignableFrom(clasz);
-		return true;
-	}
+    @Override
+    public boolean supports(Class<?> clasz) {
+        // return TestRunDto.class.isAssignableFrom(clasz);
+        return true;
+    }
 
-	@Override
-	public void validate(Object target, Errors errors) {
+    @Override
+    public void validate(Object target, Errors errors) {
 
-		ValidationUtils.rejectIfEmptyOrWhitespace(errors, "label",
-				"l.enter.label", "Please enter a label!");
-	}
+        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "label",
+                "l.enter.label", "Please enter a label!");
+    }
 
 }

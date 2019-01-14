@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 European Union, interactive instruments GmbH
+ * Copyright 2017-2019 European Union, interactive instruments GmbH
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
  * You may not use this work except in compliance with the Licence.
@@ -23,9 +23,9 @@ package de.interactive_instruments.etf.webapp;
  * Created by herrmann@interactive-instruments.de.
  */
 public class WebAppConstants {
-	private WebAppConstants() {}
+    private WebAppConstants() {}
 
-	public static final String TESTDOMAIN_PARAM = "testdomain";
+    public static final String TESTDOMAIN_PARAM = "testdomain";
 
-	public static final String API_BASE_URL = "v2";
+    public static final String API_BASE_URL = "v2";
 }

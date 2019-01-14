@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 European Union, interactive instruments GmbH
+ * Copyright 2017-2019 European Union, interactive instruments GmbH
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
  * You may not use this work except in compliance with the Licence.
@@ -41,27 +41,27 @@ import de.interactive_instruments.exceptions.config.ConfigurationException;
 @Controller
 public class ViewController {
 
-	@Autowired
-	TestRunController testRunController;
+    @Autowired
+    TestRunController testRunController;
 
-	@Autowired
-	EtfConfigController configController;
+    @Autowired
+    EtfConfigController configController;
 
-	@RequestMapping(value = {"/", "/etf", "/index.html"}, method = RequestMethod.GET)
-	public String overview(Model model) throws StorageException, ConfigurationException {
-		testRunController.addMetaData(model);
-		model.addAttribute("maxUploadSizeHr", FileUtils.byteCountToDisplaySize(
-				configController.getPropertyAsLong(ETF_MAX_UPLOAD_SIZE)));
-		model.addAttribute("maxUploadSize",
-				configController.getPropertyAsLong(ETF_MAX_UPLOAD_SIZE));
+    @RequestMapping(value = {"/", "/etf", "/index.html"}, method = RequestMethod.GET)
+    public String overview(Model model) throws StorageException, ConfigurationException {
+        testRunController.addMetaData(model);
+        model.addAttribute("maxUploadSizeHr", FileUtils.byteCountToDisplaySize(
+                configController.getPropertyAsLong(ETF_MAX_UPLOAD_SIZE)));
+        model.addAttribute("maxUploadSize",
+                configController.getPropertyAsLong(ETF_MAX_UPLOAD_SIZE));
 
-		final long reportExp = configController.getPropertyAsLong(ETF_TESTREPORTS_LIFETIME_EXPIRATION);
-		if (reportExp > 0) {
-			model.addAttribute("maxTestRunLifetime",
-					DurationFormatUtils.formatDurationWords(TimeUnit.MINUTES.toMillis(reportExp), true, true));
-		}
+        final long reportExp = configController.getPropertyAsLong(ETF_TESTREPORTS_LIFETIME_EXPIRATION);
+        if (reportExp > 0) {
+            model.addAttribute("maxTestRunLifetime",
+                    DurationFormatUtils.formatDurationWords(TimeUnit.MINUTES.toMillis(reportExp), true, true));
+        }
 
-		return "etf";
-	}
+        return "etf";
+    }
 
 }

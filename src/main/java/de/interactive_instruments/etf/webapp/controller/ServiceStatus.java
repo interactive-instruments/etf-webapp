@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 European Union, interactive instruments GmbH
+ * Copyright 2017-2019 European Union, interactive instruments GmbH
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
  * You may not use this work except in compliance with the Licence.
@@ -25,7 +25,7 @@ package de.interactive_instruments.etf.webapp.controller;
  * @author Jon Herrmann ( herrmann aT interactive-instruments doT de )
  */
 public enum ServiceStatus {
-	STARTING, GOOD, MINOR, // increased exception rate, 1 exception found in the last 100 log file lines
-	MAJOR, // failed to load component
-	MAINTENANCE, SHUTDOWN
+    STARTING, GOOD, MINOR, // increased exception rate, 1 exception found in the last 100 log file lines
+    MAJOR, // failed to load component
+    MAINTENANCE, SHUTDOWN
 }
