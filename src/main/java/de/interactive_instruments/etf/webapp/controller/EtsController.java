@@ -85,7 +85,7 @@ public class EtsController {
     private OutputFormat xmlOutputFormat;
     private final static String ETS_URL = WebAppConstants.API_BASE_URL + "/ExecutableTestSuites";
     private final static String ETS_MODEL_DESCRIPTION = "The Executable Test Suite model is described in the "
-            + "[XML schema documentation](https://services.interactive-instruments.de/etf/schemadoc/test_xsd.html#ExecutableTestSuite). "
+            + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/test_xsd.html#ExecutableTestSuite). "
             + ETF_ITEM_COLLECTION_DESCRIPTION;
 
     @PostConstruct

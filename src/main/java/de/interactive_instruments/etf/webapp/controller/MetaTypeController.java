@@ -96,16 +96,16 @@ public class MetaTypeController {
     }
 
     private final static String TEST_ITEM_TYPEL_DESCRIPTION = "The Test Item Type model is described in the  "
-            + "[XML schema documentation](https://services.interactive-instruments.de/etf/schemadoc/test_xsd.html#TestItemType). "
+            + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/test_xsd.html#TestItemType). "
             + ETF_ITEM_COLLECTION_DESCRIPTION;
     private final static String TRANSLATION_TEMP_BUNDLE_DESCRIPTION = "The Translation Template Bundle model is described as "
-            + "[XML schema documentation](https://services.interactive-instruments.de/etf/schemadoc/basicTypes_xsd.html#TranslationTemplateBundle). "
+            + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/basicTypes_xsd.html#TranslationTemplateBundle). "
             + ETF_ITEM_COLLECTION_DESCRIPTION;
     private final static String COMPONENT_DESCRIPTION = "The Components model is described in the "
-            + "[XML schema documentation](https://services.interactive-instruments.de/etf/schemadoc/capabilities_xsd.html#Component). "
+            + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/capabilities_xsd.html#Component). "
             + ETF_ITEM_COLLECTION_DESCRIPTION;
     private final static String TAG_DESCRIPTION = "The Tag model is described in the "
-            + "[XML schema documentation](https://services.interactive-instruments.de/etf/schemadoc/capabilities_xsd.html#Tag). "
+            + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/capabilities_xsd.html#Tag). "
             + ETF_ITEM_COLLECTION_DESCRIPTION;
 
     ///////////////// Test Item Types
