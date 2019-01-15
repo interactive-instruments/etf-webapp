@@ -78,7 +78,7 @@ public class TestObjectTypeController {
     private final static String TEST_OBJECT_TYPES_URL = WebAppConstants.API_BASE_URL + "/TestObjectTypes";
 
     private final static String TEST_OBJECT_TYPE_DESCRIPTION = "The Test Object model is described in the "
-            + "[XML schema documentation](https://services.interactive-instruments.de/etf/schemadoc/capabilities_xsd.html#TestObjectType) "
+            + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/capabilities_xsd.html#TestObjectType) "
             + ETF_ITEM_COLLECTION_DESCRIPTION;
 
     @PostConstruct

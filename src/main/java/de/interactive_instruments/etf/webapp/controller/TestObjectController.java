@@ -121,7 +121,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
             T_CREATION_WINDOW, TimeUnit.MINUTES).build();
 
     private final static String TEST_OBJECT_DESCRIPTION = "The Test Object model is described in the "
-            + "[XML schema documentation](https://services.interactive-instruments.de/etf/schemadoc/capabilities_xsd.html#TestObject). "
+            + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/capabilities_xsd.html#TestObject). "
             + ETF_ITEM_COLLECTION_DESCRIPTION;
 
     private static class TestObjectCleaner implements ExpirationItemHolder {

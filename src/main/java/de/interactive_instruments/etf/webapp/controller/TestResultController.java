@@ -114,7 +114,7 @@ public class TestResultController {
     private final Logger logger = LoggerFactory.getLogger(TestResultController.class);;
 
     private final static String TEST_RUN_DESCRIPTION = "The Test Run model is described in the "
-            + "[XML schema documentation](https://services.interactive-instruments.de/etf/schemadoc/run_xsd.html#TestRun). "
+            + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/run_xsd.html#TestRun). "
             + ETF_ITEM_COLLECTION_DESCRIPTION;
 
     private final static String TEST_TASK_RESULT_NOTE = " Note: a Test Run consists of one or multiple Test Task Results. "
@@ -122,7 +122,7 @@ public class TestResultController {
             + "Use the Test Run interface to get all results of a Test Run and the Test Task Result interfaces to get only one single result. ";
 
     private final static String TEST_TASK_RESULT_DESCRIPTION = "The Test Task model is described in the "
-            + "[XML schema documentation](https://services.interactive-instruments.de/etf/schemadoc/result_xsd.html#TestTaskResult). "
+            + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/result_xsd.html#TestTaskResult). "
             + TEST_TASK_RESULT_NOTE
             + ETF_ITEM_COLLECTION_DESCRIPTION;
 
