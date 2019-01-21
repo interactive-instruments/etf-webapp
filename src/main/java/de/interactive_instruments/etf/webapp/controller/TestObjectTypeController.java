@@ -29,7 +29,6 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.transform.TransformerConfigurationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 
 import de.interactive_instruments.Credentials;
 import de.interactive_instruments.UriUtils;
+import de.interactive_instruments.etf.component.loaders.LoadingContext;
 import de.interactive_instruments.etf.dal.dao.Dao;
 import de.interactive_instruments.etf.dal.dao.WriteDao;
 import de.interactive_instruments.etf.dal.dto.capabilities.ResourceDto;
@@ -72,6 +72,9 @@ public class TestObjectTypeController {
     @Autowired
     private StreamingService streaming;
 
+    @Autowired
+    private LoadingContext loadingContext;
+
     private final Logger logger = LoggerFactory.getLogger(TestObjectTypeController.class);
 
     private Dao<TestObjectTypeDto> testObjectTypeDao;
@@ -82,11 +85,12 @@ public class TestObjectTypeController {
             + ETF_ITEM_COLLECTION_DESCRIPTION;
 
     @PostConstruct
-    private void init() throws IOException, TransformerConfigurationException, ObjectWithIdNotFoundException {
+    private void init() throws IOException {
         testObjectTypeDao = dataStorageService.getDao(TestObjectTypeDto.class);
         final EidMap<TestObjectTypeDto> supportedTypes = TestObjectTypeDetectorManager.getSupportedTypes();
         ((WriteDao) testObjectTypeDao).deleteAllExisting(supportedTypes.keySet());
         ((WriteDao) testObjectTypeDao).addAll(supportedTypes.values());
+        loadingContext.getItemRegistry().register(supportedTypes.values());
 
         streaming.prepareCache(testObjectTypeDao, new SimpleFilter());
         logger.info("Test Object Type controller initialized");

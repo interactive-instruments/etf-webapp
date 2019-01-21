@@ -75,7 +75,6 @@ import de.interactive_instruments.etf.webapp.helpers.User;
 import de.interactive_instruments.etf.webapp.helpers.View;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
 import de.interactive_instruments.exceptions.StorageException;
-import de.interactive_instruments.exceptions.config.ConfigurationException;
 import de.interactive_instruments.exceptions.config.InvalidPropertyException;
 import de.interactive_instruments.exceptions.config.MissingPropertyException;
 import de.interactive_instruments.io.*;
@@ -112,7 +111,6 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
     // 7 minutes for adding resources
     private static final long T_CREATION_WINDOW = 7;
     private IFile testDataDir;
-    private IFile tmpUploadDir;
     private final Logger logger = LoggerFactory.getLogger(TestObjectController.class);
     private FileStorage fileStorage;
     private FileContentFilterHolder baseFilter;
@@ -188,8 +186,8 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
 
     private static class GmlAtomFilter implements FileContentFilterHolder {
         private ContentTypeFilter contentFilter = new ContentTypeFilter(
-                new String[]{"application/xml", "application/gml+xml", "application/atom+xml"});
-        private MultiFileFilter filenameFilter = new FilenameExtensionFilter(new String[]{".xml", ".gml"});
+                "application/xml", "application/gml+xml", "application/atom+xml");
+        private MultiFileFilter filenameFilter = new FilenameExtensionFilter(".xml", ".gml");
 
         public ContentTypeFilter content() {
             return this.contentFilter;
@@ -207,7 +205,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
         testDataDir.ensureDir();
         logger.info("TEST_DATA_DIR " + testDataDir.getAbsolutePath());
 
-        tmpUploadDir = etfConfig.getPropertyAsFile(EtfConfigController.ETF_TESTDATA_UPLOAD_DIR);
+        final IFile tmpUploadDir = etfConfig.getPropertyAsFile(EtfConfigController.ETF_TESTDATA_UPLOAD_DIR);
         if (tmpUploadDir.exists()) {
             tmpUploadDir.deleteDirectory();
         }
@@ -284,7 +282,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
         return this.testObjectDao.getByIds(eids, filter);
     }
 
-    private TestObjectDto createWithUrlResources(final TestObjectDto testObject) throws LocalizableApiError {
+    private void createWithUrlResources(final TestObjectDto testObject) throws LocalizableApiError {
 
         String hash;
         try {
@@ -316,11 +314,9 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
             throw new LocalizableApiError("l.invalid.url", e);
         }
         testObject.setItemHash(hash);
-
-        return testObject;
     }
 
-    private TestObjectDto createWithFileResources(final TestObjectDto testObject,
+    private void createWithFileResources(final TestObjectDto testObject,
             final Collection<List<MultipartFile>> uploadFiles)
             throws IOException, LocalizableApiError, InvalidPropertyException {
 
@@ -406,13 +402,11 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
         if (v.getEmptyFiles() > 0) {
             testObject.properties().setProperty("emptyFiles", String.valueOf(v.getEmptyFiles()));
         }
-
-        return testObject;
     }
 
     // Main entry point for Test Run contoller
     public void initResourcesAndAdd(final TestObjectDto testObject, final Set<EID> supportedTestObjectTypes)
-            throws StorageException, IOException, ObjectWithIdNotFoundException, LocalizableApiError, InvalidPropertyException {
+            throws IOException, ObjectWithIdNotFoundException, LocalizableApiError, InvalidPropertyException {
 
         // If the ID is null, the Test Object references external data
         if (testObject.getId() == null) {
@@ -455,7 +449,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
 
     // Undocumented interface for internal use
     @RequestMapping(value = {WebAppConstants.API_BASE_URL + "/TestDataDirs"}, method = RequestMethod.GET)
-    public List<String> testDataDirs() throws IOException, StorageException, ObjectWithIdNotFoundException {
+    public List<String> testDataDirs() {
         if (!"standard".equals(View.getWorkflowType())) {
             // forbidden in non standard workflow
             return null;
@@ -476,9 +470,9 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
     @ApiOperation(value = "Get Test Object as JSON", notes = TEST_OBJECT_DESCRIPTION, tags = {TEST_OBJECTS_TAG_NAME})
     @RequestMapping(value = {TESTOBJECTS_URL + "/{id}",
             TESTOBJECTS_URL + "/{id}.json"}, method = RequestMethod.GET, produces = "application/json")
-    public void testObjectByIdJson(@PathVariable String id, @RequestParam(required = false) String search,
+    public void testObjectByIdJson(@PathVariable String id,
             HttpServletRequest request, HttpServletResponse response)
-            throws IOException, StorageException, ObjectWithIdNotFoundException, LocalizableApiError {
+            throws IOException, ObjectWithIdNotFoundException, LocalizableApiError {
         if (transientTestObjects.getIfPresent(EidConverter.toEid(id)) != null) {
             throw new LocalizableApiError("l.temporary.testobject.access", false, 404);
         }
@@ -492,7 +486,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
             @ApiParam(value = LIMIT_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int limit,
             HttpServletRequest request,
             HttpServletResponse response)
-            throws StorageException, ConfigurationException, IOException, ObjectWithIdNotFoundException {
+            throws IOException {
         streaming.asJson2(testObjectDao, request, response, new SimpleFilter(offset, limit));
     }
 
@@ -506,7 +500,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
             @RequestParam(required = false, defaultValue = "0") int offset,
             @RequestParam(required = false, defaultValue = "0") int limit,
             HttpServletRequest request,
-            HttpServletResponse response) throws IOException, StorageException, ObjectWithIdNotFoundException {
+            HttpServletResponse response) throws IOException {
         streaming.asXml2(testObjectDao, request, response, new SimpleFilter(offset, limit));
     }
 
@@ -520,7 +514,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
     public void testObjectByIdXml(
             @ApiParam(value = "ID of Test Object that needs to be fetched", example = "EID-1ffe6ea2-5c29-4ce9-9a7e-f4d9d71119e8", required = true) @PathVariable String id,
             HttpServletRequest request, HttpServletResponse response)
-            throws IOException, StorageException, ObjectWithIdNotFoundException, LocalizableApiError {
+            throws IOException, ObjectWithIdNotFoundException, LocalizableApiError {
         if (transientTestObjects.getIfPresent(EidConverter.toEid(id)) != null) {
             throw new LocalizableApiError("l.temporary.testobject.access", false, 404);
         }
@@ -534,7 +528,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
     })
     @RequestMapping(value = TESTOBJECTS_URL + "/{id}", method = RequestMethod.DELETE)
     public ResponseEntity<String> delete(@PathVariable String id, HttpServletResponse response)
-            throws StorageException, ObjectWithIdNotFoundException, IOException {
+            throws ObjectWithIdNotFoundException, IOException {
         final ResponseEntity<String> exists = exists(id);
         if (!HttpStatus.NOT_FOUND.equals(exists.getStatusCode())) {
             this.testObjectDao.delete(EidConverter.toEid(id));
@@ -550,9 +544,9 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
     })
     @RequestMapping(value = {TESTOBJECTS_URL + "/{id}"}, method = RequestMethod.HEAD)
     public ResponseEntity<String> exists(
-            @PathVariable String id) throws IOException, StorageException, ObjectWithIdNotFoundException {
-        return testObjectDao.exists(EidConverter.toEid(id)) ? new ResponseEntity(HttpStatus.NO_CONTENT)
-                : new ResponseEntity(HttpStatus.NOT_FOUND);
+            @PathVariable String id) {
+        return testObjectDao.exists(EidConverter.toEid(id)) ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @ApiModel(value = "TestObjectUpload", description = "Test Object Upload response")
@@ -654,8 +648,10 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
         return testObjectUpload;
     }
 
-    @ApiOperation(value = "Get all Test Object resources", notes = "Download the Test Object - as long as the creator did not set the 'data.downloadable' property to 'false'.", tags = {
-            TEST_OBJECTS_TAG_NAME})
+    @ApiOperation(value = "Get all Test Object resources", notes = "Download the resources of the Test Object."
+            + " The creator of the object can prevent this setting the property 'data.downloadable' to 'false'."
+            + " Temporary test objects cannot be downloaded, 'data.downloadable' is set to 'false' by default.", tags = {
+                    TEST_OBJECTS_TAG_NAME})
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Test Object resources returned"),
             @ApiResponse(code = 400, message = "Invalid Test Object ID", response = ApiError.class),
@@ -666,7 +662,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
     public void getResources(
             @ApiParam(value = EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id,
             final HttpServletResponse response)
-            throws StorageException, IOException, ObjectWithIdNotFoundException, LocalizableApiError {
+            throws IOException, ObjectWithIdNotFoundException, LocalizableApiError {
         final TestObjectDto testObject = testObjectDao.getById(EidConverter.toEid(id)).getDto();
         if ("true".equals(testObject.properties().getPropertyOrDefault("data.downloadable", "false"))) {
             if (testObject.getResourcesSize() == 1) {

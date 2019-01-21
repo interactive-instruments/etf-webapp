@@ -31,7 +31,6 @@ import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.transform.TransformerConfigurationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,6 @@ import de.interactive_instruments.etf.dal.dto.test.ExecutableTestSuiteDto;
 import de.interactive_instruments.etf.dal.dto.translation.TranslationTemplateBundleDto;
 import de.interactive_instruments.etf.dal.dto.translation.TranslationTemplateDto;
 import de.interactive_instruments.etf.model.EID;
-import de.interactive_instruments.etf.model.OutputFormat;
 import de.interactive_instruments.etf.model.ParameterSet;
 import de.interactive_instruments.etf.model.Parameterizable;
 import de.interactive_instruments.etf.testdriver.DependencyGraph;
@@ -82,16 +80,14 @@ public class EtsController {
 
     private final Logger logger = LoggerFactory.getLogger(EtsController.class);
     private Dao<ExecutableTestSuiteDto> etsDao;
-    private OutputFormat xmlOutputFormat;
     private final static String ETS_URL = WebAppConstants.API_BASE_URL + "/ExecutableTestSuites";
     private final static String ETS_MODEL_DESCRIPTION = "The Executable Test Suite model is described in the "
             + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/test_xsd.html#ExecutableTestSuite). "
             + ETF_ITEM_COLLECTION_DESCRIPTION;
 
     @PostConstruct
-    private void init() throws IOException, TransformerConfigurationException {
+    private void init() {
         etsDao = dataStorageService.getDao(ExecutableTestSuiteDto.class);
-        xmlOutputFormat = etsDao.getOutputFormats().values().iterator().next();
         logger.info("Executable Test Suite controller initialized!");
 
         // Prepare cache
@@ -111,7 +107,7 @@ public class EtsController {
             @ApiParam(value = FIELDS_DESCRIPTION) @RequestParam(required = false, defaultValue = "*") String fields,
             HttpServletRequest request,
             HttpServletResponse response)
-            throws StorageException, ConfigurationException, IOException, ObjectWithIdNotFoundException {
+            throws IOException, ObjectWithIdNotFoundException {
         streaming.asJson2(etsDao, request, response, new SimpleFilter(offset, limit, fields));
     }
 
@@ -126,7 +122,7 @@ public class EtsController {
             @ApiParam(value = LIMIT_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int limit,
             @ApiParam(value = FIELDS_DESCRIPTION) @RequestParam(required = false, defaultValue = "*") String fields,
             HttpServletRequest request,
-            HttpServletResponse response) throws IOException, StorageException, ObjectWithIdNotFoundException {
+            HttpServletResponse response) throws IOException, ObjectWithIdNotFoundException {
         streaming.asXml2(etsDao, request, response, new SimpleFilter(offset, limit, fields));
     }
 
@@ -139,7 +135,7 @@ public class EtsController {
     public void executableTestSuiteXmlById(
             @ApiParam(value = EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id,
             HttpServletRequest request, HttpServletResponse response)
-            throws IOException, StorageException, ObjectWithIdNotFoundException {
+            throws IOException, ObjectWithIdNotFoundException {
         streaming.asXml2(etsDao, request, response, id);
     }
 
@@ -153,7 +149,7 @@ public class EtsController {
     public void executableTestSuiteJsonById(
             @ApiParam(value = EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id,
             HttpServletRequest request,
-            HttpServletResponse response) throws IOException, StorageException, ObjectWithIdNotFoundException {
+            HttpServletResponse response) throws IOException, ObjectWithIdNotFoundException {
         streaming.asJson2(etsDao, request, response, id);
     }
 
@@ -168,17 +164,16 @@ public class EtsController {
     })
     @RequestMapping(value = {ETS_URL + "/{id}"}, method = RequestMethod.HEAD)
     public ResponseEntity<String> exists(
-            @ApiParam(value = EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id)
-            throws IOException, ObjectWithIdNotFoundException {
+            @ApiParam(value = EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id) {
         final EID eid = EidConverter.toEid(id);
         if (etsDao.exists(eid)) {
             if (etsDao.isDisabled(eid)) {
-                return new ResponseEntity(HttpStatus.LOCKED);
+                return new ResponseEntity<>(HttpStatus.LOCKED);
             } else {
-                return new ResponseEntity(HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
         } else {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
@@ -231,14 +226,13 @@ public class EtsController {
     })
     @RequestMapping(value = {ETS_URL + "/{etsId}/dependencies.json"}, method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody List<DependenciesJsonView> etsDependenciesById(@PathVariable String etsId)
-            throws StorageException, ConfigurationException, ObjectWithIdNotFoundException {
+            throws StorageException, ObjectWithIdNotFoundException {
         final Collection<ExecutableTestSuiteDto> dependencies = testDriverController
                 .getExecutableTestSuiteById(EidConverter.toEid(etsId)).getDependencies();
-        final DependencyGraph<ExecutableTestSuiteDto> graph = new DependencyGraph(dependencies);
+        final DependencyGraph<ExecutableTestSuiteDto> graph = new DependencyGraph<>(dependencies);
         final List<ExecutableTestSuiteDto> sortedDependencies = graph.sortIgnoreCylce();
-        final List<DependenciesJsonView> depsJson = sortedDependencies.stream().map(DependenciesJsonView::new)
+        return sortedDependencies.stream().map(DependenciesJsonView::new)
                 .collect(Collectors.toList());
-        return depsJson;
     }
 
 }

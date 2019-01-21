@@ -70,9 +70,9 @@ class RestExceptionHandler {
             System.gc();
             statusController.triggerMaintenance();
             return new ApiError(exception, request.getRequestURL().toString(), applicationContext);
-        } else if (Objects.equals(exception.getMessage(), "No space left on device")
+        } else if (exception != null && (Objects.equals(exception.getMessage(), "No space left on device")
                 || exception.getCause() != null && exception.getCause() instanceof IOException &&
-                        Objects.equals(exception.getCause().getMessage(), "No space left on device")) {
+                        Objects.equals(exception.getCause().getMessage(), "No space left on device"))) {
             statusController.triggerMaintenance();
             return new ApiError(exception, request.getRequestURL().toString(), applicationContext);
         } else if (exception.getCause() != null && exception.getCause() instanceof StackOverflowError

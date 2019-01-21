@@ -75,7 +75,7 @@ public class AttachmentCollection {
 
     private AttachmentCollection() {}
 
-    public static final Collection<Attachment> create(final Collection<AttachmentDto> attachmentDtos) {
+    public static Collection<Attachment> create(final Collection<AttachmentDto> attachmentDtos) {
         return attachmentDtos.stream().map(Attachment::new).collect(Collectors.toList());
     }
 }

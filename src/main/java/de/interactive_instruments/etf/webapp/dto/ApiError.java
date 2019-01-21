@@ -26,9 +26,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.web.util.NestedServletException;
 
 import de.interactive_instruments.etf.EtfConstants;
 import de.interactive_instruments.etf.webapp.controller.LocalizableApiError;
+import de.interactive_instruments.properties.PropertyUtils;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -71,8 +73,15 @@ public class ApiError {
     }
 
     public ApiError(final Throwable e, final String url, final ApplicationContext applicationContext) {
+        final Throwable excToReport;
+        if (e.getCause() instanceof LocalizableApiError && e.getCause() instanceof NestedServletException) {
+            excToReport = e.getCause();
+        } else {
+            excToReport = e;
+        }
         logger.error("EXID-" + timestamp + ": An exception occurred while trying to invoke \"" +
-                url + "\"", e);
+                url + "\"", excToReport);
+
         final LocalizableApiError localizableApiError;
         if (e instanceof LocalizableApiError) {
             localizableApiError = (LocalizableApiError) e;
@@ -85,7 +94,6 @@ public class ApiError {
             this.id = localizableApiError.getId();
             final String err = applicationContext.getMessage(localizableApiError.getId(),
                     localizableApiError.getArgumentValueArr(), null,
-                    // localizableApiError.getUserLocale());
                     LocaleContextHolder.getLocale());
             if (err == null) {
                 // Unknown
@@ -102,8 +110,13 @@ public class ApiError {
                 this.error = "Internal error";
             }
         }
-        stacktrace = ExceptionUtils.getRootCauseStackTrace(e);
+        stacktrace = attachStacktrace() ? ExceptionUtils.getRootCauseStackTrace(e) : null;
         this.url = url;
+    }
+
+    private static boolean attachStacktrace() {
+        return PropertyUtils.getenvOrProperty("ETF_LOG_DEBUG", "false").equals("true")
+                || logger.isDebugEnabled();
     }
 
     public String getError() {

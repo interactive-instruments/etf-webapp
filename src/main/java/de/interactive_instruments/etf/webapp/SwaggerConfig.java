@@ -87,7 +87,7 @@ public class SwaggerConfig {
                         "etf@interactive-instruments.de"))
                 .license("European Public License 1.2")
                 .licenseUrl("https://joinup.ec.europa.eu/page/eupl-text-11-12")
-                .version("2.0.0")
+                .version("2.1.0")
                 .build();
     }
 

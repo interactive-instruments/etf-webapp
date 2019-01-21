@@ -40,6 +40,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import de.interactive_instruments.etf.component.ComponentInfo;
 import de.interactive_instruments.etf.component.ComponentLoadingException;
+import de.interactive_instruments.etf.component.loaders.LoadingContext;
+import de.interactive_instruments.etf.component.loaders.MetadataFilesLoader;
 import de.interactive_instruments.etf.dal.dao.*;
 import de.interactive_instruments.etf.dal.dto.IncompleteDtoException;
 import de.interactive_instruments.etf.dal.dto.capabilities.ComponentDto;
@@ -48,7 +50,6 @@ import de.interactive_instruments.etf.dal.dto.run.TestTaskDto;
 import de.interactive_instruments.etf.dal.dto.test.ExecutableTestSuiteDto;
 import de.interactive_instruments.etf.model.EID;
 import de.interactive_instruments.etf.model.EidFactory;
-import de.interactive_instruments.etf.testdriver.MetadataFileTypeLoader;
 import de.interactive_instruments.etf.testdriver.TestDriverManager;
 import de.interactive_instruments.etf.testdriver.TestRun;
 import de.interactive_instruments.etf.testdriver.TestRunInitializationException;
@@ -67,15 +68,14 @@ public class TestDriverController implements PreparedDtoResolver<ExecutableTestS
     @Autowired
     private EtfConfigController etfConfig;
 
-    // Wait for TestObjectTypeController to activate all standard Test Object Types
-    @Autowired
-    private TestObjectTypeController testObjectTypeController;
-
     @Autowired
     private DataStorageService dataStorageService;
 
+    @Autowired
+    private LoadingContext loadingContext;
+
     private TestDriverManager driverManager;
-    private MetadataFileTypeLoader metadataTypeLoader;
+    private MetadataFilesLoader metadataFilesLoader;
     private Dao<ExecutableTestSuiteDto> etsDao;
     private final Logger logger = LoggerFactory.getLogger(TestDriverController.class);
 
@@ -98,9 +98,9 @@ public class TestDriverController implements PreparedDtoResolver<ExecutableTestS
             throws ConfigurationException, InvalidStateTransitionException, InitializationException, StorageException {
 
         // Metadata need to be initialized first
-        metadataTypeLoader = new MetadataFileTypeLoader(dataStorageService.getDataStorage());
-        metadataTypeLoader.getConfigurationProperties().setPropertiesFrom(etfConfig, true);
-        metadataTypeLoader.init();
+        metadataFilesLoader = new MetadataFilesLoader(dataStorageService.getDataStorage(), loadingContext);
+        metadataFilesLoader.getConfigurationProperties().setPropertiesFrom(etfConfig, true);
+        metadataFilesLoader.init();
 
         etsDao = dataStorageService.getDataStorage().getDao(ExecutableTestSuiteDto.class);
 
@@ -114,6 +114,7 @@ public class TestDriverController implements PreparedDtoResolver<ExecutableTestS
 
         // Initialize test driver
         driverManager = TestDriverManager.getDefault();
+        driverManager.setLoadingContext(loadingContext);
         driverManager.getConfigurationProperties().setPropertiesFrom(etfConfig, true);
         driverManager.getConfigurationProperties().setProperty(ETF_DATA_STORAGE_NAME, "default");
         driverManager.init();
@@ -138,6 +139,7 @@ public class TestDriverController implements PreparedDtoResolver<ExecutableTestS
     @PreDestroy
     private void shutdown() {
         driverManager.release();
+        metadataFilesLoader.release();
     }
 
     TestRun create(TestRunDto testRunDto) throws IncompleteDtoException, TestRunInitializationException {
@@ -176,17 +178,17 @@ public class TestDriverController implements PreparedDtoResolver<ExecutableTestS
     @RequestMapping(value = {MetaTypeController.COMPONENTS_URL}, params = "action=reload", method = RequestMethod.GET)
     public ResponseEntity<String> reloadAll() throws LocalizableApiError {
         if (!driverManager.getTestDriverInfo().isEmpty()) {
-            return new ResponseEntity("Operation not permitted if a test driver has already been loaded!",
+            return new ResponseEntity<>("Operation not permitted if a test driver has already been loaded!",
                     HttpStatus.FORBIDDEN);
         } else {
             try {
                 driverManager.loadAll();
             } catch (ConfigurationException e) {
-                new LocalizableApiError(e);
+                throw new LocalizableApiError(e);
             } catch (ComponentLoadingException e) {
-                new LocalizableApiError(e);
+                throw new LocalizableApiError(e);
             }
-            return new ResponseEntity("OK", HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>("OK", HttpStatus.NO_CONTENT);
         }
     }
 

@@ -48,7 +48,6 @@ import de.interactive_instruments.etf.webapp.conversion.ObjectMapperFactory;
 import de.interactive_instruments.etf.webapp.helpers.CacheControl;
 import de.interactive_instruments.exceptions.ExcUtils;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
-import de.interactive_instruments.exceptions.StorageException;
 import de.interactive_instruments.properties.PropertyUtils;
 
 /**
@@ -81,7 +80,7 @@ public class StreamingService {
     void asXml2(
             final Dao<? extends Dto> dao, final HttpServletRequest request, final HttpServletResponse response,
             final Filter filter)
-            throws IOException, ObjectWithIdNotFoundException, StorageException {
+            throws IOException {
         if (CacheControl.clientNeedsUpdate(dao, request, response)) {
             final ServletOutputStream out = response.getOutputStream();
             response.setContentType(MediaType.TEXT_XML_VALUE);
@@ -93,7 +92,7 @@ public class StreamingService {
 
     void asXml2(
             final Dao<? extends Dto> dao, final HttpServletRequest request, final HttpServletResponse response, final String id)
-            throws IOException, ObjectWithIdNotFoundException, StorageException {
+            throws IOException, ObjectWithIdNotFoundException {
         if (CacheControl.clientNeedsUpdate(dao, request, response)) {
             final ServletOutputStream out = response.getOutputStream();
             response.setContentType(MediaType.TEXT_XML_VALUE);
@@ -126,7 +125,7 @@ public class StreamingService {
     void asJson2(
             final Dao<? extends Dto> dao, final HttpServletRequest request, final HttpServletResponse response,
             final Filter filter)
-            throws IOException, ObjectWithIdNotFoundException, StorageException {
+            throws IOException {
         if (CacheControl.clientNeedsUpdate(dao, request, response)) {
             final ServletOutputStream out = response.getOutputStream();
             response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
@@ -152,7 +151,7 @@ public class StreamingService {
 
     void asJson2(
             final Dao<? extends Dto> dao, final HttpServletRequest request, final HttpServletResponse response, final String id)
-            throws IOException, ObjectWithIdNotFoundException, StorageException {
+            throws IOException, ObjectWithIdNotFoundException {
         if (CacheControl.clientNeedsUpdate(dao, request, response)) {
             final ServletOutputStream out = response.getOutputStream();
             response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
@@ -164,7 +163,7 @@ public class StreamingService {
 
     void asJson2(
             final Dto dto, final HttpServletResponse response)
-            throws IOException, ObjectWithIdNotFoundException, StorageException {
+            throws IOException {
         final ServletOutputStream out = response.getOutputStream();
         response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         mapper.writeValue(out, dto);

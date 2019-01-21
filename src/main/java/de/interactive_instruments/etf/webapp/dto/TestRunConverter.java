@@ -17,26 +17,17 @@
  * European Public Administrations Programme (http://ec.europa.eu/isa)
  * through Action 1.17: A Reusable INSPIRE Reference Platform (ARE3NA).
  */
-package de.interactive_instruments.etf.webapp.helpers;
+package de.interactive_instruments.etf.webapp.dto;
 
-import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+import de.interactive_instruments.etf.dal.dto.run.TestRunDto;
+import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
 
 /**
  * @author Jon Herrmann ( herrmann aT interactive-instruments doT de )
  */
-public class RequestHelper {
-
-    private RequestHelper() {}
-
-    public static boolean isOnlyHtmlRequested(final HttpServletRequest request) {
-        final String acceptHeader = request.getHeader("Accept");
-        if (request.getRequestURI().endsWith(".html")
-                && (acceptHeader == null || acceptHeader.contains("html"))) {
-            return true;
-        }
-        return !acceptHeader.contains("xml")
-                && !acceptHeader.contains("json")
-                && !acceptHeader.contains("*/*");
-    }
-
+public interface TestRunConverter {
+    TestRunDto toTestRun() throws ObjectWithIdNotFoundException, IOException, URISyntaxException;
 }

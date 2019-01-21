@@ -19,25 +19,28 @@
  */
 package de.interactive_instruments.etf.webapp.dto;
 
-import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.*;
+import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.TEST_RUN_LABEL_DESCRIPTION;
+import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.TEST_RUN_LABEL_EXAMPLE;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.interactive_instruments.etf.dal.dao.PreparedDtoResolver;
 import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectDto;
+import de.interactive_instruments.etf.dal.dto.capabilities.TestRunTemplateDto;
 import de.interactive_instruments.etf.dal.dto.run.TestRunDto;
 import de.interactive_instruments.etf.dal.dto.run.TestTaskDto;
 import de.interactive_instruments.etf.dal.dto.test.ExecutableTestSuiteDto;
+import de.interactive_instruments.etf.model.EID;
 import de.interactive_instruments.etf.model.EidFactory;
-import de.interactive_instruments.etf.webapp.conversion.EidConverter;
+import de.interactive_instruments.etf.webapp.controller.LocalizableApiError;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
 
 import io.swagger.annotations.ApiModel;
@@ -48,11 +51,10 @@ import io.swagger.annotations.ApiModelProperty;
  */
 @JsonPropertyOrder({
         "label",
-        "executableTestSuiteIds",
         "arguments"
 })
-@ApiModel(value = "StartTestRunRequest", description = "Start a test run")
-public class StartTestRunRequest implements TestRunConverter {
+@ApiModel(value = "ApplyTestRunTemplateRequest", description = "Apply a Test Run Template")
+public class ApplyTestRunTemplateRequest implements TestRunConverter {
 
     @ApiModelProperty(position = 0, value = TEST_RUN_LABEL_DESCRIPTION
             + " Mandatory.", example = TEST_RUN_LABEL_EXAMPLE, dataType = "String", required = true)
@@ -60,67 +62,62 @@ public class StartTestRunRequest implements TestRunConverter {
     @NotNull(message = "{l.enter.label}")
     private String label;
 
-    @ApiModelProperty(position = 1, value = "List of Executable Test Suite IDs. Mandatory."
-            + EID_DESCRIPTION + ". See Implementation Notes for an complete example.", required = true)
-    @JsonProperty(required = true)
-    @NotNull(message = "{l.json.empty.ets.list}")
-    private List<String> executableTestSuiteIds;
-
-    @ApiModelProperty(position = 2, value = "Test run arguments as key value pairs. Mandatory (use {} for empty arguments). See Implementation Notes for an complete example.", required = true)
+    @ApiModelProperty(position = 2, value = "Test run arguments as key value pairs. "
+            + "Mandatory (use {} for empty arguments). See Implementation Notes for an complete example.", required = true)
     @JsonProperty
     private SimpleArguments arguments;
 
-    @ApiModelProperty(position = 3, value = "Simplified Test Object. Either a reference to an existing Test Object or a new "
-            + "Test Object definition which references a resource in the web. Mandatory. "
-            + "See Test Object model for more information and the Implementation Notes for an complete example.", required = true)
-    @JsonProperty(required = true)
+    @ApiModelProperty(position = 3, value = "Simplified Test Object. This property is mandatory if the Test Run Template does"
+            + " not reference a Test Object. If the Test Run Template has a reference, this property is silently ignored!"
+            + " The simplified Test Object can either reference an existing Test Object or contain a new"
+            + " Test Object definition which references a resource in the web."
+            + " See Test Object model for more information and the Implementation Notes for an complete example.", required = true)
+    @JsonProperty
     @NotNull(message = "{l.json.invalid.test.object}")
     private SimpleTestObject testObject;
 
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private EID testRunTemplateId;
 
     @JsonIgnore
-    private PreparedDtoResolver<ExecutableTestSuiteDto> etsResolver;
+    private PreparedDtoResolver<TestRunTemplateDto> testRunTemplateResolver;
 
     @JsonIgnore
     private PreparedDtoResolver<TestObjectDto> testObjectResolver;
 
-    public StartTestRunRequest() {}
+    public ApplyTestRunTemplateRequest() {}
 
-    public StartTestRunRequest(final String label, final List<String> executableTestSuiteIds,
-            SimpleArguments arguments, final SimpleTestObject testObject,
-            final Map<String, Object> additionalProperties) {
+    public ApplyTestRunTemplateRequest(final String label, final String testRunTemplate,
+            SimpleArguments arguments, final SimpleTestObject testObject) {
         this.label = label;
-        this.executableTestSuiteIds = executableTestSuiteIds;
         this.arguments = arguments;
         this.testObject = testObject;
-        this.additionalProperties = additionalProperties;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
+    @Override
     public TestRunDto toTestRun()
             throws ObjectWithIdNotFoundException, IOException, URISyntaxException {
+
+        final TestRunTemplateDto testRunTemplateDto = testRunTemplateResolver.getById(testRunTemplateId)
+                .getDto();
+
+        final TestObjectDto testObject;
+        if (testRunTemplateDto.getTestObjects() == null || testRunTemplateDto.getTestObjects().isEmpty()) {
+            if (this.testObject == null) {
+                throw new LocalizableApiError("l.json.invalid.test.object", false, 400);
+            }
+            testObject = this.testObject.toTestObject(testObjectResolver);
+        } else {
+            testObject = testRunTemplateDto.getTestObjects().get(0);
+        }
+
         final TestRunDto testRun = new TestRunDto();
         testRun.setId(EidFactory.getDefault().createRandomId());
-
         testRun.setLabel(label);
 
-        final TestObjectDto testObject = this.testObject.toTestObject(testObjectResolver);
-
-        for (final String executableTestSuiteId : executableTestSuiteIds) {
+        for (final ExecutableTestSuiteDto executableTestSuite : testRunTemplateDto.getExecutableTestSuites()) {
             final TestTaskDto testTaskDto = new TestTaskDto();
-            testTaskDto.setExecutableTestSuite(
-                    etsResolver.getById(EidConverter.toEid(executableTestSuiteId)).getDto());
+            testTaskDto.setExecutableTestSuite(executableTestSuite);
             testTaskDto.setTestObject(testObject);
             if (arguments == null || arguments.get().isEmpty()) {
                 // FIXME
@@ -139,9 +136,11 @@ public class StartTestRunRequest implements TestRunConverter {
         return testRun;
     }
 
-    public void setResolvers(final PreparedDtoResolver<ExecutableTestSuiteDto> etsResolver,
+    public void init(final EID testRunTemplateId,
+            final PreparedDtoResolver<TestRunTemplateDto> testRunTemplateResolver,
             final PreparedDtoResolver<TestObjectDto> testObjectResolver) {
-        this.etsResolver = etsResolver;
+        this.testRunTemplateId = testRunTemplateId;
+        this.testRunTemplateResolver = testRunTemplateResolver;
         this.testObjectResolver = testObjectResolver;
     }
 }

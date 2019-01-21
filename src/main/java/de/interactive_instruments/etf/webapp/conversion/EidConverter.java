@@ -26,7 +26,6 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 
 import org.springframework.core.convert.converter.Converter;
@@ -66,7 +65,7 @@ public final class EidConverter implements EtfConverter<EID> {
         }
     }
 
-    public static String toStr(final EID eid) {
+    private static String toStr(final EID eid) {
         return Objects.requireNonNull(eid, "Cannot convert empty ETF ID").getId();
     }
 
@@ -108,7 +107,7 @@ public final class EidConverter implements EtfConverter<EID> {
     private final static class Deserializer extends JsonDeserializer<EID> implements Converter<String, EID> {
         @Override
         public EID deserialize(final JsonParser jp, final DeserializationContext ctxt)
-                throws IOException, JsonProcessingException {
+                throws IOException {
             final JsonNode node = jp.getCodec().readTree(jp);
             return toEid(node.asText());
         }
@@ -122,7 +121,7 @@ public final class EidConverter implements EtfConverter<EID> {
     private final static class Serializer extends JsonSerializer<EID> implements Converter<EID, String> {
         @Override
         public void serialize(final EID value, final JsonGenerator gen, final SerializerProvider serializers)
-                throws IOException, JsonProcessingException {
+                throws IOException {
             if (value != null) {
                 gen.writeString(value.getId());
             }

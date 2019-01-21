@@ -101,8 +101,6 @@ public class TestResultController {
     // default 1 hour
     private String cacheMaxAgeSeconds = "3600";
 
-    private IFile reportDir;
-    private IFile stylesheetFile;
     private Dao<TestRunDto> testRunDao;
     private Dao<TestTaskResultDto> testTaskResultDao;
     private OutputFormat testRunHtmlReportFormat;
@@ -111,7 +109,7 @@ public class TestResultController {
 
     // TODO report comparison output format
     // private XslReportTransformer comparisonTransformer;
-    private final Logger logger = LoggerFactory.getLogger(TestResultController.class);;
+    private final Logger logger = LoggerFactory.getLogger(TestResultController.class);
 
     private final static String TEST_RUN_DESCRIPTION = "The Test Run model is described in the "
             + "[XML schema documentation](https://resources.etf-validator.net/schema/v2/doc/run_xsd.html#TestRun). "
@@ -204,7 +202,7 @@ public class TestResultController {
     public void init() throws IOException, TransformerConfigurationException,
             ConfigurationException, InvalidStateTransitionException, InitializationException {
 
-        reportDir = etfConfig.getPropertyAsFile(EtfConstants.ETF_DATASOURCE_DIR).expandPath("obj");
+        final IFile reportDir = etfConfig.getPropertyAsFile(EtfConstants.ETF_DATASOURCE_DIR).expandPath("obj");
 
         testRunDao = dataStorageService.getDao(TestRunDto.class);
 
@@ -341,7 +339,7 @@ public class TestResultController {
             @ApiParam(value = OFFSET_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int offset,
             @ApiParam(value = LIMIT_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int limit,
             HttpServletRequest request,
-            HttpServletResponse response) throws StorageException, IOException, ObjectWithIdNotFoundException {
+            HttpServletResponse response) throws IOException, ObjectWithIdNotFoundException {
         setMaxAgeHeader(response);
         streaming.asXml2(testRunDao, request, response, new SimpleFilter(offset, limit));
     }
@@ -352,7 +350,7 @@ public class TestResultController {
             @ApiParam(value = "Test Run ID. "
                     + EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id,
             HttpServletRequest request, HttpServletResponse response)
-            throws StorageException, IOException, ObjectWithIdNotFoundException {
+            throws IOException, ObjectWithIdNotFoundException {
         setMaxAgeHeader(response);
         streaming.asXml2(testRunDao, request, response, id);
     }
@@ -364,7 +362,7 @@ public class TestResultController {
             @ApiParam(value = OFFSET_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int offset,
             @ApiParam(value = LIMIT_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int limit,
             HttpServletRequest request,
-            HttpServletResponse response) throws IOException, StorageException, ObjectWithIdNotFoundException {
+            HttpServletResponse response) throws IOException, ObjectWithIdNotFoundException {
         setMaxAgeHeader(response);
         streaming.asJson2(testRunDao, request, response, new SimpleFilter(offset, limit));
     }
@@ -376,7 +374,7 @@ public class TestResultController {
             @ApiParam(value = "Test Run ID. "
                     + EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id,
             HttpServletRequest request,
-            HttpServletResponse response) throws IOException, StorageException, ObjectWithIdNotFoundException {
+            HttpServletResponse response) throws IOException, ObjectWithIdNotFoundException {
         setMaxAgeHeader(response);
         streaming.asJson2(testRunDao, request, response, id);
     }
@@ -408,7 +406,7 @@ public class TestResultController {
     public void testRunLog(
             @ApiParam(value = "Test Run ID. "
                     + EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id,
-            HttpServletResponse response) throws StorageException, IOException, LocalizableApiError {
+            HttpServletResponse response) throws IOException, LocalizableApiError {
         setMaxAgeHeader(response);
         try {
             final TestRunDto dto = testRunDao.getById(EidConverter.toEid(id)).getDto();
@@ -432,7 +430,7 @@ public class TestResultController {
     @RequestMapping(value = {
             API_BASE_URL + "/TestTaskResults/{id}/Attachments"}, method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody Collection<AttachmentCollection.Attachment> getAttachmentsAsJson(
-            @PathVariable String id) throws ObjectWithIdNotFoundException, StorageException, IOException {
+            @PathVariable String id) throws ObjectWithIdNotFoundException, IOException {
         final TestTaskResultDto testTaskResultDto = testTaskResultDao.getById(EidConverter.toEid(id)).getDto();
         return AttachmentCollection.create(testTaskResultDto.getAttachments());
     }
@@ -449,7 +447,7 @@ public class TestResultController {
     public void getAttachmentById(
             @PathVariable String id,
             @PathVariable String attachmentId,
-            HttpServletResponse response) throws ObjectWithIdNotFoundException, StorageException, IOException {
+            HttpServletResponse response) throws ObjectWithIdNotFoundException, IOException {
         setMaxAgeHeader(response);
         final TestTaskResultDto testTaskResultDto = testTaskResultDao.getById(EidConverter.toEid(id)).getDto();
         final AttachmentDto attachmentDto = testTaskResultDto.getAttachmentById(EidConverter.toEid(attachmentId));
@@ -476,7 +474,7 @@ public class TestResultController {
             @ApiParam(value = "Test Task ID. "
                     + EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id,
             HttpServletRequest request, HttpServletResponse response)
-            throws StorageException, IOException, ObjectWithIdNotFoundException {
+            throws IOException, ObjectWithIdNotFoundException {
         setMaxAgeHeader(response);
         streaming.asXml2(testTaskResultDao, request, response, id);
     }
@@ -492,7 +490,7 @@ public class TestResultController {
             @ApiParam(value = "Test Task ID. "
                     + EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id,
             HttpServletRequest request, HttpServletResponse response)
-            throws StorageException, IOException, ObjectWithIdNotFoundException {
+            throws IOException, ObjectWithIdNotFoundException {
         setMaxAgeHeader(response);
         streaming.asJson2(testTaskResultDao, request, response, id);
     }

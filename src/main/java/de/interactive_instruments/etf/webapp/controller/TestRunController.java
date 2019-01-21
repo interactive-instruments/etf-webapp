@@ -62,6 +62,7 @@ import de.interactive_instruments.etf.testdriver.*;
 import de.interactive_instruments.etf.webapp.conversion.EidConverter;
 import de.interactive_instruments.etf.webapp.dto.ApiError;
 import de.interactive_instruments.etf.webapp.dto.StartTestRunRequest;
+import de.interactive_instruments.etf.webapp.dto.TestRunConverter;
 import de.interactive_instruments.etf.webapp.helpers.User;
 import de.interactive_instruments.exceptions.ExcUtils;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
@@ -205,7 +206,7 @@ public class TestRunController implements TestRunEventListener {
     }
 
     @PostConstruct
-    public void init() throws ParseException, ConfigurationException, IOException, StorageException {
+    public void init() throws ParseException, ConfigurationException, IOException {
         logger.info(Runtime.getRuntime().availableProcessors() + " cores available.");
 
         // SEL dir
@@ -274,9 +275,68 @@ public class TestRunController implements TestRunEventListener {
             try {
                 testResultController.updateTestRun(testRun);
             } catch (StorageException | ObjectWithIdNotFoundException e) {
-                final String identifier = testRun != null ? testRun.getLabel() : "";
-                logger.error("Test Run " + identifier + " could not be updated");
+                logger.error("Test Run " + testRun.getLabel() + " could not be updated");
             }
+        }
+    }
+
+    void startTestRun(final TestRunConverter testRunConverter, final HttpServletRequest request,
+            final HttpServletResponse response)
+            throws LocalizableApiError, InvalidPropertyException {
+
+        statusController.ensureStatusNotMajor();
+        // Remove finished test runs
+        taskPoolRegistry.removeDone();
+
+        try {
+            final TestRunDto testRunDto = testRunConverter.toTestRun();
+            testRunDto.setDefaultLang(LocaleContextHolder.getLocale().getLanguage());
+
+            final TestObjectDto tO = testRunDto.getTestObjects().get(0);
+
+            tO.setAuthor(User.getUser(request));
+
+            // Add all Test Object Types supported by the first ETS
+            final Set<EID> requiredTestObjectTypeIds = new HashSet<>();
+            final Iterator<ExecutableTestSuiteDto> etsIterator = testRunDto.getExecutableTestSuites().iterator();
+
+            requiredTestObjectTypeIds
+                    .addAll(EidHolderWithParent.getAllIdsAndParentIds(etsIterator.next().getSupportedTestObjectTypes()));
+            // now iterate over the other ETS and delete all Test Object Types that are not supported by the first ETS
+            while (etsIterator.hasNext()) {
+                final Set<EID> supportedIds = EidHolder.getAllIds(etsIterator.next().getSupportedTestObjectTypes());
+                requiredTestObjectTypeIds.removeIf(eid -> !supportedIds.contains(eid));
+            }
+            // if the list is now empty, the Test Suites are incompatible
+            if (requiredTestObjectTypeIds.isEmpty()) {
+                throw new LocalizableApiError("l.ets.supported.testObject.type.incompatible", false, 400);
+            }
+            testObjectController.initResourcesAndAdd(tO, requiredTestObjectTypeIds);
+
+            // Check if test object is already in use
+            for (TestRun tR : taskPoolRegistry.getTasks()) {
+                if (!tR.getProgress().getState().isCompletedFailedCanceledOrFinalizing() &&
+                        tR.getResult() != null && tR.getResult().getTestObjects() != null &&
+                        tR.getResult().getTestObjects().get(0) != null &&
+                        tO.getId().equals(tR.getResult().getTestObjects().get(0).getId())) {
+                    logger.info("Rejecting test start: test object " + tO.getId() + " is in use");
+                    throw new LocalizableApiError("l.testObject.lock", false, 409, tO.getLabel());
+                }
+            }
+
+            // this will save the Dto
+            initAndSubmit(testRunDto);
+
+            response.setStatus(HttpStatus.CREATED.value());
+            streamingService.asJson2(testRunDao, request, response, testRunDto.getId().getId());
+        } catch (URISyntaxException e) {
+            throw new LocalizableApiError(e);
+        } catch (ObjectWithIdNotFoundException e) {
+            throw new LocalizableApiError(e);
+        } catch (StorageException e) {
+            throw new LocalizableApiError(e);
+        } catch (IOException e) {
+            throw new LocalizableApiError(e);
         }
     }
 
@@ -429,7 +489,7 @@ public class TestRunController implements TestRunEventListener {
             + "setting exclusively the 'id' in the StartTestRunRequest's 'testObject' property. "
             + "If data do not need to be uploaded or a web service is tested, a temporary Test Object "
             + "can be created directly with this interface, by defining at least the "
-            + "'resources' property of the 'testObject' but omit except the 'id' property."
+            + "'resources' property of the 'testObject' but then the 'id' property must be omitted."
             + "\n\n"
             + "Example for starting a Test Run for a service Test:  <br/>"
             + "\n\n"
@@ -488,65 +548,12 @@ public class TestRunController implements TestRunEventListener {
             HttpServletResponse response)
             throws LocalizableApiError, InvalidPropertyException {
 
-        statusController.ensureStatusNotMajor();
-
         if (result.hasErrors()) {
             throw new LocalizableApiError(result.getFieldError());
         }
 
-        // Remove finished test runs
-        taskPoolRegistry.removeDone();
-
-        try {
-            final TestRunDto testRunDto = testRunRequest.toTestRun(testObjectController, testDriverController);
-            testRunDto.setDefaultLang(LocaleContextHolder.getLocale().getLanguage());
-
-            final TestObjectDto tO = testRunDto.getTestObjects().get(0);
-
-            tO.setAuthor(User.getUser(request));
-
-            // Add all Test Object Types supported by the first ETS
-            final Set<EID> requiredTestObjectTypeIds = new HashSet<>();
-            final Iterator<ExecutableTestSuiteDto> etsIterator = testRunDto.getExecutableTestSuites().iterator();
-
-            requiredTestObjectTypeIds
-                    .addAll(EidHolderWithParent.getAllIdsAndParentIds(etsIterator.next().getSupportedTestObjectTypes()));
-            // now iterate over the other ETS and delete all Test Object Types that are not supported by the first ETS
-            while (etsIterator.hasNext()) {
-                final Set<EID> supportedIds = EidHolder.getAllIds(etsIterator.next().getSupportedTestObjectTypes());
-                requiredTestObjectTypeIds.removeIf(eid -> !supportedIds.contains(eid));
-            }
-            // if the list is now empty, the Test Suites are incompatible
-            if (requiredTestObjectTypeIds.isEmpty()) {
-                throw new LocalizableApiError("l.ets.supported.testObject.type.incompatible", false, 400);
-            }
-            testObjectController.initResourcesAndAdd(tO, requiredTestObjectTypeIds);
-
-            // Check if test object is already in use
-            for (TestRun tR : taskPoolRegistry.getTasks()) {
-                if (!tR.getProgress().getState().isCompletedFailedCanceledOrFinalizing() &&
-                        tR.getResult() != null && tR.getResult().getTestObjects() != null &&
-                        tR.getResult().getTestObjects().get(0) != null &&
-                        tO.getId().equals(tR.getResult().getTestObjects().get(0).getId())) {
-                    logger.info("Rejecting test start: test object " + tO.getId() + " is in use");
-                    throw new LocalizableApiError("l.testObject.lock", false, 409, tO.getLabel());
-                }
-            }
-
-            // this will save the Dto
-            initAndSubmit(testRunDto);
-
-            response.setStatus(HttpStatus.CREATED.value());
-            streamingService.asJson2(testRunDao, request, response, testRunDto.getId().getId());
-        } catch (URISyntaxException e) {
-            throw new LocalizableApiError(e);
-        } catch (ObjectWithIdNotFoundException e) {
-            throw new LocalizableApiError(e);
-        } catch (StorageException e) {
-            throw new LocalizableApiError(e);
-        } catch (IOException e) {
-            throw new LocalizableApiError(e);
-        }
+        testRunRequest.setResolvers(testDriverController, testObjectController);
+        startTestRun(testRunRequest, request, response);
     }
 
 }

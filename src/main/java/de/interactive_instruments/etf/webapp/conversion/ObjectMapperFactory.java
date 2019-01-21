@@ -24,7 +24,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
@@ -122,7 +121,7 @@ public class ObjectMapperFactory implements FactoryBean<ObjectMapper> {
     public static class JsonHtmlXssDeserializer extends JsonDeserializer<String> {
         @Override
         public String deserialize(final JsonParser jp, final DeserializationContext ctxt)
-                throws IOException, JsonProcessingException {
+                throws IOException {
             final JsonNode node = jp.getCodec().readTree(jp);
             return HtmlUtils.htmlEscape(node.asText());
         }

@@ -91,23 +91,28 @@ class WebExceptionHandler {
 
         final String hint;
         final boolean submitReport;
-        if (e.getCause() != null && e.getCause() instanceof OutOfMemoryError) {
-            hint = "The Java Virtual Machine is out of memory and"
-                    + " no more memory could be made available. "
-                    + " Ask your System Administrator to increase the Java heap space by "
-                    + " adjusting the '-Xmx' parameter!" + contactAdminText;
-            submitReport = false;
-            statusController.triggerMaintenance();
-        } else if (Objects.equals(e.getMessage(), "No space left on device")
-                || e.getCause() != null && e.getCause() instanceof IOException &&
-                        Objects.equals(e.getCause().getMessage(), "No space left on device")) {
-            hint = "Disk space critical. Contact your system Administrator. " + contactAdminText;
-            statusController.triggerMaintenance();
-            submitReport = false;
-        } else if (e.getCause() != null && e.getCause() instanceof StackOverflowError || e
-                .getCause() instanceof StackOverflowError) {
-            hint = "This is most likely a fatal bug in the application." + " Please report it!";
-            submitReport = true;
+        if (e == null) {
+            if (e.getCause() != null && e.getCause() instanceof OutOfMemoryError) {
+                hint = "The Java Virtual Machine is out of memory and"
+                        + " no more memory could be made available. "
+                        + " Ask your System Administrator to increase the Java heap space by "
+                        + " adjusting the '-Xmx' parameter!" + contactAdminText;
+                submitReport = false;
+                statusController.triggerMaintenance();
+            } else if (Objects.equals(e.getMessage(), "No space left on device")
+                    || e.getCause() != null && e.getCause() instanceof IOException &&
+                            Objects.equals(e.getCause().getMessage(), "No space left on device")) {
+                hint = "Disk space critical. Contact your system Administrator. " + contactAdminText;
+                statusController.triggerMaintenance();
+                submitReport = false;
+            } else if (e.getCause() != null && e.getCause() instanceof StackOverflowError || e
+                    .getCause() instanceof StackOverflowError) {
+                hint = "This is most likely a fatal bug in the application." + " Please report it!";
+                submitReport = true;
+            } else {
+                hint = null;
+                submitReport = true;
+            }
         } else {
             hint = null;
             submitReport = true;

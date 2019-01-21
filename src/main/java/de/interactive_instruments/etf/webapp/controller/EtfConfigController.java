@@ -68,7 +68,7 @@ import de.interactive_instruments.properties.PropertyUtils;
 public class EtfConfigController implements PropertyHolder {
 
     @FunctionalInterface
-    public interface EtfConfigPropertyChangeListener {
+    interface EtfConfigPropertyChangeListener {
         void propertyChanged(final String propertyName, final String oldValue, final String newValue);
     }
 
@@ -83,6 +83,7 @@ public class EtfConfigController implements PropertyHolder {
     public static final String ETF_REPORT_COMPARISON = "etf.report.comparison";
     // in minutes
     public static final String ETF_TESTREPORTS_LIFETIME_EXPIRATION = "etf.testreports.lifetime.expiration";
+    public static final String ETF_TEST_RUN_TEMPLATES_ALLOW_CREATION = "etf.testruntemplates.allow.creation";
     public static final String ETF_WORKFLOWS = "etf.workflows";
     public static final String ETF_TESTDATA_DIR = "etf.testdata.dir";
     public static final String ETF_TESTDATA_UPLOAD_DIR = "etf.testdata.upload.dir";
@@ -115,7 +116,7 @@ public class EtfConfigController implements PropertyHolder {
 
     private final List<EtfConfigPropertyChangeListener> listeners = new ArrayList<>();
 
-    private static String requiredConfigVersion = "2";
+    private final static String requiredConfigVersion = "2";
 
     private String version = "unknown";
     private static EtfConfigController instance = null;
@@ -360,10 +361,16 @@ public class EtfConfigController implements PropertyHolder {
             configProperties.setProperty(ETF_API_ALLOW_ORIGIN, configProperties.getProperty(ETF_WEBAPP_BASE_URL));
         }
 
-        // Workflow
+        // Workflow and Template cloning
         if (!this.getProperty(ETF_WORKFLOWS).equals("simplified")) {
-            logger.error("Workflow types other than 'simplified', are not supported yet!");
-            throw new RuntimeException("Workflow types other than 'simplified' are not supported yet!");
+            configProperties.setProperty(ETF_TEST_RUN_TEMPLATES_ALLOW_CREATION,
+                    configProperties.getProperty(ETF_TEST_RUN_TEMPLATES_ALLOW_CREATION, "false"));
+        } else if (this.getProperty(ETF_WORKFLOWS).equals("simplified")) {
+            configProperties.setProperty(ETF_TEST_RUN_TEMPLATES_ALLOW_CREATION,
+                    configProperties.getProperty(ETF_TEST_RUN_TEMPLATES_ALLOW_CREATION, "true"));
+        } else {
+            logger.error("Unknown workflow type '" + this.getProperty(ETF_WORKFLOWS) + "'");
+            throw new RuntimeException("Unknown workflow type '" + this.getProperty(ETF_WORKFLOWS) + "'");
         }
 
         // Max upload size
@@ -387,7 +394,7 @@ public class EtfConfigController implements PropertyHolder {
         } catch (final NoSuchBeanDefinitionException e) {
             logger.error("MultipartResolver not found: max upload size cannot be checked.");
             // Fallback limit 100 MB, only checked in the web interface
-            configProperties.setProperty(ETF_MAX_UPLOAD_SIZE, String.valueOf("104857600"));
+            configProperties.setProperty(ETF_MAX_UPLOAD_SIZE, "104857600");
         }
         try {
             final long maxUploadSize = getPropertyAsLong(ETF_MAX_UPLOAD_SIZE);
@@ -412,7 +419,7 @@ public class EtfConfigController implements PropertyHolder {
 
     private void plausabilityCheckMinutes(final String property) {
         final long minutes;
-        final String defaultVal = this.defaultProperties.get(property);
+        final String defaultVal = defaultProperties.get(property);
         try {
             minutes = this.getPropertyAsLong(property);
         } catch (InvalidPropertyException e) {
@@ -522,15 +529,12 @@ public class EtfConfigController implements PropertyHolder {
     }
 
     private Manifest getManifest() {
-        final InputStream inputStream = servletContext.getResourceAsStream("/META-INF/MANIFEST.MF");
-        if (inputStream != null) {
-            try {
+        try (final InputStream inputStream = servletContext.getResourceAsStream("/META-INF/MANIFEST.MF")) {
+            if (inputStream != null) {
                 return new Manifest(inputStream);
-            } catch (IOException e) {
-                logger.error("Manifest not available; ", e);
-            } finally {
-                IFile.closeQuietly(inputStream);
             }
+        } catch (IOException e) {
+            logger.error("Manifest not available; ", e);
         }
         // in development mode
         return new Manifest();
@@ -656,19 +660,19 @@ public class EtfConfigController implements PropertyHolder {
                         ch.qos.logback.classic.Level.ALL);
                 final ch.qos.logback.classic.Level currentLevel = rootLogger.getLevel();
                 if (currentLevel == newLevel) {
-                    return new ResponseEntity("NO CHANGE", HttpStatus.FOUND);
+                    return new ResponseEntity<>("NO CHANGE", HttpStatus.FOUND);
                 } else if (newLevel == Level.ALL) {
-                    return new ResponseEntity("Unknown log level", HttpStatus.BAD_REQUEST);
+                    return new ResponseEntity<>("Unknown log level", HttpStatus.BAD_REQUEST);
                 }
                 rootLogger.setLevel(newLevel);
                 logger.info("Set log level to {} ", newLevel);
-                return new ResponseEntity("OK", HttpStatus.OK);
+                return new ResponseEntity<>("OK", HttpStatus.OK);
             } catch (final ClassCastException e) {
                 logger.error(LogUtils.FATAL_MESSAGE, "Failed to change log level: ", e);
-                return new ResponseEntity("Could not change logger", HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<>("Could not change logger", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
-            return new ResponseEntity("Empty log level", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Empty log level", HttpStatus.BAD_REQUEST);
         }
     }
 

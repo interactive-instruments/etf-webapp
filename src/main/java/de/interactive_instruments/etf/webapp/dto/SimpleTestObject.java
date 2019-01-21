@@ -42,7 +42,6 @@ import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectDto;
 import de.interactive_instruments.etf.model.EidFactory;
 import de.interactive_instruments.etf.webapp.conversion.EidConverter;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
-import de.interactive_instruments.exceptions.StorageException;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -100,7 +99,7 @@ public class SimpleTestObject {
     }
 
     public TestObjectDto toTestObject(final PreparedDtoResolver<TestObjectDto> testObjectDao)
-            throws URISyntaxException, IOException, ObjectWithIdNotFoundException, StorageException {
+            throws URISyntaxException, IOException, ObjectWithIdNotFoundException {
         final TestObjectDto testObject;
         if (resources != null && !resources.isEmpty()) {
             testObject = new TestObjectDto();

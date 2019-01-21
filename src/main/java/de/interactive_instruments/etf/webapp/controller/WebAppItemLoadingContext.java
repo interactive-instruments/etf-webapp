@@ -17,26 +17,28 @@
  * European Public Administrations Programme (http://ec.europa.eu/isa)
  * through Action 1.17: A Reusable INSPIRE Reference Platform (ARE3NA).
  */
-package de.interactive_instruments.etf.webapp.helpers;
+package de.interactive_instruments.etf.webapp.controller;
 
-import javax.servlet.http.HttpServletRequest;
+import org.springframework.stereotype.Component;
+
+import de.interactive_instruments.etf.component.loaders.*;
 
 /**
  * @author Jon Herrmann ( herrmann aT interactive-instruments doT de )
  */
-public class RequestHelper {
+@Component
+public class WebAppItemLoadingContext implements LoadingContext {
 
-    private RequestHelper() {}
+    private final ItemRegistry itemRegistry = new DefaultItemRegistry();
+    private final ItemFileObserverRegistry itemFileObserverRegistry = new DefaultItemFileObserverRegistry();
 
-    public static boolean isOnlyHtmlRequested(final HttpServletRequest request) {
-        final String acceptHeader = request.getHeader("Accept");
-        if (request.getRequestURI().endsWith(".html")
-                && (acceptHeader == null || acceptHeader.contains("html"))) {
-            return true;
-        }
-        return !acceptHeader.contains("xml")
-                && !acceptHeader.contains("json")
-                && !acceptHeader.contains("*/*");
+    @Override
+    public ItemRegistry getItemRegistry() {
+        return itemRegistry;
     }
 
+    @Override
+    public ItemFileObserverRegistry getItemFileObserverRegistry() {
+        return itemFileObserverRegistry;
+    }
 }

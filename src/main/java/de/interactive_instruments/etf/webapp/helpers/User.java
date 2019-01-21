@@ -33,7 +33,7 @@ import de.interactive_instruments.exceptions.ExcUtils;
  */
 public class User {
 
-    private static String[] evalProxyHeaders = new String[]{
+    private final static String[] evalProxyHeaders = new String[]{
             "X-Forwarded-For",
             "HTTP_X_FORWARDED_FOR",
             "X-Real-IP",

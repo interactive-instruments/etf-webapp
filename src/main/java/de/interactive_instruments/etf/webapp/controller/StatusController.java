@@ -274,7 +274,7 @@ public class StatusController {
     })
     @RequestMapping(value = {"/", "/v2/heartbeat"}, method = RequestMethod.HEAD)
     public ResponseEntity<Void> simpleHeartbeat() {
-        return new ResponseEntity(serviceStatusHeaders.get(), HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(serviceStatusHeaders.get(), HttpStatus.NO_CONTENT);
     }
 
     // @PreAuthorize("#oauth2.clientHasRole('ROLE_ADMIN')")

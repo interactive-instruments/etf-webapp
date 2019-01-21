@@ -17,14 +17,9 @@
  * European Public Administrations Programme (http://ec.europa.eu/isa)
  * through Action 1.17: A Reusable INSPIRE Reference Platform (ARE3NA).
  */
-package de.interactive_instruments.etf;
+package de.interactive_instruments.etf
 
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
-import ch.qos.logback.core.ConsoleAppender
-import ch.qos.logback.core.UnsynchronizedAppenderBase
-import ch.qos.logback.core.rolling.RollingFileAppender
-import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP
-import ch.qos.logback.core.rolling.TimeBasedRollingPolicy
 import de.interactive_instruments.IFile
 import de.interactive_instruments.properties.PropertyUtils
 import org.apache.commons.lang.SystemUtils

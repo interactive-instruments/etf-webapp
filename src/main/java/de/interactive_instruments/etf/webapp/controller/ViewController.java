@@ -60,7 +60,6 @@ public class ViewController {
             model.addAttribute("maxTestRunLifetime",
                     DurationFormatUtils.formatDurationWords(TimeUnit.MINUTES.toMillis(reportExp), true, true));
         }
-
         return "etf";
     }
 

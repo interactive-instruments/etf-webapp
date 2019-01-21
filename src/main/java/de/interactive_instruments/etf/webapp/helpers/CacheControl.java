@@ -106,8 +106,8 @@ public class CacheControl {
         return clientNeedsUpdate(dao, request, response, 120);
     }
 
-    public static void setCache(final long maxAge, final HttpServletResponse response) {
-        response.setHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=" + String.valueOf(maxAge));
+    private static void setCache(final long maxAge, final HttpServletResponse response) {
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "public, max-age=" + maxAge);
     }
 
 }

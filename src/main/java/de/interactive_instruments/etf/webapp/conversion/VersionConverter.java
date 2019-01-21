@@ -26,7 +26,6 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 
 import org.springframework.core.convert.converter.Converter;
@@ -38,8 +37,8 @@ import de.interactive_instruments.Version;
  */
 public class VersionConverter implements EtfConverter<Version> {
 
-    private static Deserializer deserializer = new Deserializer();
-    private static Serializer serializer = new Serializer();
+    private final static Deserializer deserializer = new Deserializer();
+    private final static Serializer serializer = new Serializer();
 
     public static Version toVersion(final String version) {
         return Version.parse(version);
@@ -87,7 +86,7 @@ public class VersionConverter implements EtfConverter<Version> {
     private final static class Deserializer extends JsonDeserializer<Version> implements Converter<String, Version> {
         @Override
         public Version deserialize(final JsonParser jp, final DeserializationContext ctxt)
-                throws IOException, JsonProcessingException {
+                throws IOException {
             final JsonNode node = jp.getCodec().readTree(jp);
             return new Version(node.asText());
         }
@@ -101,7 +100,7 @@ public class VersionConverter implements EtfConverter<Version> {
     private final static class Serializer extends JsonSerializer<Version> implements Converter<Version, String> {
         @Override
         public void serialize(final Version value, final JsonGenerator gen, final SerializerProvider serializers)
-                throws IOException, JsonProcessingException {
+                throws IOException {
             if (value != null) {
                 gen.writeString(value.getAsString());
             }
