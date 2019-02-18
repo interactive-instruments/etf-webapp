@@ -91,7 +91,7 @@ dependencies {
     // Prepackaged test drivers
     // TODO download in future versions
     testdriver group: 'de.interactive_instruments.etf.testdriver', name: 'etf-suitd', version: '2.0.1' + project.snapshotSuffix
-    testdriver group: 'de.interactive_instruments.etf.testdriver', name: 'etf-bsxtd', version: '2.0.2' + project.snapshotSuffix
+    testdriver group: 'de.interactive_instruments.etf.testdriver', name: 'etf-bsxtd', version: '2.1.0' + project.snapshotSuffix
     testdriver group: 'de.interactive_instruments.etf.testdriver', name: 'etf-tetd', version: '1.0.1' + project.snapshotSuffix
 
     // Bean validation
