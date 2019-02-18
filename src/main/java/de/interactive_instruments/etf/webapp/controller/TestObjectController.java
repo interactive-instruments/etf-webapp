@@ -138,7 +138,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
             int removed = 0;
             try {
                 // TODO filter dtos by timestamp and temporary property
-                final PreparedDtoCollection<TestObjectDto> all = testObjectDao.getAll(new SimpleFilter());
+                final PreparedDtoCollection<TestObjectDto> all = testObjectDao.getAll(SimpleFilter.allItems());
                 for (final TestObjectDto testObjectDto : all) {
                     if ("true".equals(testObjectDto.properties().getPropertyOrDefault("temporary", "false"))) {
                         final long expirationTime = testObjectDto.getCreationDate().getTime() + unit.toMillis(maxLifeTime);

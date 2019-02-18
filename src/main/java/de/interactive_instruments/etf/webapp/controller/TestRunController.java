@@ -60,9 +60,8 @@ import de.interactive_instruments.etf.model.EidHolder;
 import de.interactive_instruments.etf.model.EidHolderWithParent;
 import de.interactive_instruments.etf.testdriver.*;
 import de.interactive_instruments.etf.webapp.conversion.EidConverter;
-import de.interactive_instruments.etf.webapp.dto.ApiError;
-import de.interactive_instruments.etf.webapp.dto.StartTestRunRequest;
-import de.interactive_instruments.etf.webapp.dto.TestRunConverter;
+import de.interactive_instruments.etf.webapp.dto.*;
+import de.interactive_instruments.etf.webapp.helpers.SimpleFilter;
 import de.interactive_instruments.etf.webapp.helpers.User;
 import de.interactive_instruments.exceptions.ExcUtils;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
@@ -85,6 +84,9 @@ public class TestRunController implements TestRunEventListener {
 
     @Autowired
     private TestObjectController testObjectController;
+
+    @Autowired
+    private TestRunTemplateController testRunTemplateController;
 
     @Autowired
     private TestResultController testResultController;
@@ -280,7 +282,7 @@ public class TestRunController implements TestRunEventListener {
         }
     }
 
-    void startTestRun(final TestRunConverter testRunConverter, final HttpServletRequest request,
+    void startTestRun(final AbstractTestRunRequest testRunRequest, final HttpServletRequest request,
             final HttpServletResponse response)
             throws LocalizableApiError, InvalidPropertyException {
 
@@ -289,7 +291,7 @@ public class TestRunController implements TestRunEventListener {
         taskPoolRegistry.removeDone();
 
         try {
-            final TestRunDto testRunDto = testRunConverter.toTestRun();
+            final TestRunDto testRunDto = testRunRequest.toTestRun();
             testRunDto.setDefaultLang(LocaleContextHolder.getLocale().getLanguage());
 
             final TestObjectDto tO = testRunDto.getTestObjects().get(0);
@@ -328,7 +330,8 @@ public class TestRunController implements TestRunEventListener {
             initAndSubmit(testRunDto);
 
             response.setStatus(HttpStatus.CREATED.value());
-            streamingService.asJson2(testRunDao, request, response, testRunDto.getId().getId());
+            streamingService.asJson2(testRunDao, request, response, testRunDto.getId().getId(),
+                    SimpleFilter.singleItemFilter("id"));
         } catch (URISyntaxException e) {
             throw new LocalizableApiError(e);
         } catch (ObjectWithIdNotFoundException e) {
@@ -421,7 +424,7 @@ public class TestRunController implements TestRunEventListener {
             @ApiResponse(code = 200, message = "OK"),
     })
     @RequestMapping(value = API_BASE_URL + "/TestRuns", params = "view=progress", method = RequestMethod.GET)
-    public @ResponseBody List<TestRunsJsonView> listTestRunsJson() throws StorageException, ConfigurationException {
+    public @ResponseBody List<TestRunsJsonView> listTestRunsJson() {
         final List<TestRunsJsonView> testRunsJsonViews = new ArrayList<TestRunsJsonView>();
         taskPoolRegistry.getTasks().forEach(t -> testRunsJsonViews.add(new TestRunsJsonView(t)));
         return testRunsJsonViews;
@@ -436,8 +439,7 @@ public class TestRunController implements TestRunEventListener {
     @RequestMapping(value = {TEST_RUNS_URL + "/{id}"}, method = RequestMethod.HEAD)
     public ResponseEntity exists(
             @ApiParam(value = "Test Run ID. "
-                    + EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id)
-            throws StorageException {
+                    + EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id) {
         final EID eid = EidConverter.toEid(id);
         return taskPoolRegistry.contains(eid) || testRunDao.exists(eid) ? new ResponseEntity(HttpStatus.NO_CONTENT)
                 : new ResponseEntity(HttpStatus.NOT_FOUND);
@@ -481,7 +483,10 @@ public class TestRunController implements TestRunEventListener {
         return new ResponseEntity(HttpStatus.NOT_FOUND);
     }
 
-    @ApiOperation(value = "Start a new Test Run", notes = "Start a new Test Run by specifying one or multiple Executable Test Suites "
+    @ApiOperation(value = "Start a new Test Run", notes = "There are two ways to start a Test Run. In addition to Ad hoc test runs, in which all the necessary information "
+            + "is transferred in the query, Templates allow you to store all or some of the information on the server side and "
+            + "then execute it using this endpoint.\n\n"
+            + "Adhoc: Start a new Test Run by specifying one or multiple Executable Test Suites "
             + "that shall be used to test one Test Object with specified test parameters. "
             + "If data for a Test Object need to be uploaded, the Test Object POST interface "
             + "needs to be used to create a new temporary Test Object. "
@@ -494,7 +499,7 @@ public class TestRunController implements TestRunEventListener {
             + "Example for starting a Test Run for a service Test:  <br/>"
             + "\n\n"
             + "    {\n"
-            + "        \"label\": \"Test run on 15:00 - 01.01.2017 with Conformance class Conformance Class: Download Service - Pre-defined WFS\",\n"
+            + "        \"label\": \"Test run on 15:00 - 01.01.2019 with Conformance class Conformance Class: Download Service - Pre-defined WFS\",\n"
             + "        \"executableTestSuiteIds\": [\"EID174edf55-699b-446c-968c-1892a4d8d5bd\"],\n"
             + "        \"arguments\": {},\n"
             + "        \"testObject\": {\n"
@@ -507,7 +512,7 @@ public class TestRunController implements TestRunEventListener {
             + "Example for starting a Test Run for a file-based Test, using a temporary Test Object:<br/>"
             + "\n\n"
             + "    {\n"
-            + "        \"label\": \"Test run on 15:00 - 01.01.2017 with Conformance class INSPIRE Profile based on EN ISO 19115 and EN ISO 19119\",\n"
+            + "        \"label\": \"Test run on 15:00 - 01.01.2019 with Conformance class INSPIRE Profile based on EN ISO 19115 and EN ISO 19119\",\n"
             + "        \"executableTestSuiteIds\": [\"EIDec7323d5-d8f0-4cfe-b23a-b826df86d58c\"],\n"
             + "        \"arguments\": {\n"
             + "            \"files_to_test\": \".*\",\n"
@@ -523,8 +528,63 @@ public class TestRunController implements TestRunEventListener {
             + "Example for starting a Test Run for a file-based Test, referencing Test data in the web:<br/>"
             + "\n\n"
             + "    {\n"
-            + "        \"label\": \"Test run on 15:00 - 01.01.2017 with Conformance class INSPIRE Profile based on EN ISO 19115 and EN ISO 19119\",\n"
+            + "        \"label\": \"Test run on 15:00 - 01.01.2019 with Conformance class INSPIRE Profile based on EN ISO 19115 and EN ISO 19119\",\n"
             + "        \"executableTestSuiteIds\": [\"EIDec7323d5-d8f0-4cfe-b23a-b826df86d58c\"],\n"
+            + "        \"arguments\": {\n"
+            + "            \"files_to_test\": \".*\",\n"
+            + "            \"tests_to_execute\": \".*\"\n"
+            + "        },\n"
+            + "        \"testObject\": {\n"
+            + "            \"resources\": {\n"
+            + "                \"data\": \"http://example.com/test-data.xml\"\n"
+            + "            }\n"
+            + "        }\n"
+            + "    }\n"
+            + "\n\n"
+
+            + "Template: Start a new Test Run by specifying one Test Run Template "
+            + "that shall be used to test one Test Object against a set of Executable Test Suites with "
+            + "specified test parameters. "
+            + "An existing Test Object can be referenced by setting the 'id' in the 'testObject' property. "
+            + "If data do not need to be uploaded or a web service is tested, a temporary Test Object "
+            + "can be created directly with this interface, by defining at least the "
+            + "'resources' property of the 'testObject' but then the 'id' property must be omitted."
+            + "\n\n"
+            + "Example for starting a Test Run with a Test Run Template for service Tests:  <br/>"
+            + "\n\n"
+            + "    {\n"
+            + "        \"testRunTemplateId\": \"EID994edf55-699b-446c-968c-1892a4d8d000\",\n"
+            + "        \"label\": \"Test run on 15:00 - 01.01.2019 with all Download Services Conformance Classes\",\n"
+            + "        \"arguments\": {},\n"
+            + "        \"testObject\": {\n"
+            + "            \"resources\": {\n"
+            + "                \"serviceEndpoint\": \"http://example.com/service?request=GetCapabilities&service=WFS\"\n"
+            + "            }\n"
+            + "        }\n"
+            + "    }\n"
+            + "\n\n"
+            + "Example for starting a Test Run with a Test Run Template for a file-based Test, using an existing Test Object:<br/>"
+            + "\n\n"
+            + "    {\n"
+            + "        \"testRunTemplateId\": \"EID942edf55-069b-44a6-12f3-1892a4d8d949\",\n"
+            + "        \"label\": \"Test run on 15:00 - 01.01.2019 with all Metadata Conformance Classes\",\n"
+            + "        \"arguments\": {\n"
+            + "            \"files_to_test\": \".*\",\n"
+            + "            \"tests_to_execute\": \".*\"\n"
+            + "        },\n"
+            + "        \"testObject\": {\n"
+            + "            \"id\": \"8cdd7fab-0c02-4f9e-b957-b40b7d3d22e0\"\n"
+            + "        }\n"
+            + "    }\n"
+            + "\n\n"
+            + "Where \"EID8cdd7fab-0c02-4f9e-b957-b40b7d3d22e0\" is the ID of a previously created Test Object. If the "
+            + "Test Object does not exist, a 404 error is thrown. The IDs of Temporary Test Objects are not accepted. "
+            + "\n\n"
+            + "Example for starting a Test Run with a Test Run Template for a file-based Test, , referencing Test data in the web:<br/>"
+            + "\n\n"
+            + "    {\n"
+            + "        \"testRunTemplateId\": \"EID942edf55-069b-44a6-12f3-1892a4d8d949\",\n"
+            + "        \"label\": \"Test run on 15:00 - 01.01.2019 with all Metadata Conformance Classes\",\n"
             + "        \"arguments\": {\n"
             + "            \"files_to_test\": \".*\",\n"
             + "            \"tests_to_execute\": \".*\"\n"
@@ -539,12 +599,14 @@ public class TestRunController implements TestRunEventListener {
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Test Run created"),
             @ApiResponse(code = 400, message = "Invalid request", response = ApiError.class),
-            @ApiResponse(code = 404, message = "Test Object or Executable Test Suite with ID not found", response = ApiError.class),
+            @ApiResponse(code = 404, message = "AdHoc: Test Object or Executable Test Suite not found."
+                    + " Template: Test Run Template or Test Object not found.", response = ApiError.class),
             @ApiResponse(code = 409, message = "Test Object already in use", response = ApiError.class),
             @ApiResponse(code = 500, message = "Internal error", response = ApiError.class),
     })
     @RequestMapping(value = TEST_RUNS_URL, method = RequestMethod.POST)
-    public void start(@RequestBody @Valid StartTestRunRequest testRunRequest, BindingResult result, HttpServletRequest request,
+    public void start(@RequestBody @Valid AbstractTestRunRequest testRunRequest, BindingResult result,
+            HttpServletRequest request,
             HttpServletResponse response)
             throws LocalizableApiError, InvalidPropertyException {
 
@@ -552,8 +614,7 @@ public class TestRunController implements TestRunEventListener {
             throw new LocalizableApiError(result.getFieldError());
         }
 
-        testRunRequest.setResolvers(testDriverController, testObjectController);
+        testRunRequest.inject(dataStorageService);
         startTestRun(testRunRequest, request, response);
     }
-
 }

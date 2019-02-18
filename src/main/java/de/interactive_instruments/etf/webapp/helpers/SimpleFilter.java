@@ -34,22 +34,26 @@ public class SimpleFilter implements Filter {
         this(offset, limit, "*");
     }
 
-    public SimpleFilter(final int offset, final int limit, final String fields) {
+    private SimpleFilter(final int offset, final int limit, final String fields) {
         this.offset = offset > 0 ? offset : 0;
-        this.limit = limit > 0 && limit < 5000 ? limit : 1500;
+        this.limit = limit >= 0 && limit < 5000 ? limit : 1500;
         this.fields = fields != null ? fields.trim() : "*";
     }
 
-    public SimpleFilter(final String fields) {
-        this.offset = 0;
-        this.limit = 1500;
-        this.fields = fields != null ? fields.trim() : "*";
+    public static Filter allItems() {
+        return new SimpleFilter(0, 1500);
     }
 
-    public SimpleFilter() {
-        this.offset = 0;
-        this.limit = 1500;
-        this.fields = "*";
+    public static Filter filterItems(final String fields) {
+        return new SimpleFilter(0, 1500, fields);
+    }
+
+    public static Filter filterItems(final int offset, final int limit, final String fields) {
+        return new SimpleFilter(offset, limit > 0 && limit < 5000 ? limit : 1500, fields);
+    }
+
+    public static Filter singleItemFilter(final String fields) {
+        return new SimpleFilter(0, 0, fields);
     }
 
     @Override

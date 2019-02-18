@@ -46,6 +46,9 @@ import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectDto;
 import de.interactive_instruments.etf.dal.dto.test.ExecutableTestSuiteDto;
 import de.interactive_instruments.etf.dal.dto.translation.TranslationTemplateDto;
 import de.interactive_instruments.etf.model.EID;
+import de.interactive_instruments.etf.webapp.dto.AbstractTestRunRequest;
+import de.interactive_instruments.etf.webapp.dto.ApplyTestRunTemplateRequest;
+import de.interactive_instruments.etf.webapp.dto.StartTestRunRequest;
 
 /**
  * @author Jon Herrmann ( herrmann aT interactive-instruments doT de )
@@ -155,6 +158,12 @@ public class ObjectMapperFactory implements FactoryBean<ObjectMapper> {
         etfModule.addDeserializer(de.interactive_instruments.Version.class, new VersionConverter().jsonDeserializer());
         // Prevent XSS
         etfModule.addDeserializer(String.class, new JsonHtmlXssDeserializer());
+
+        PropertyBasedSubTypeDeserializer<AbstractTestRunRequest> testRunRequestDeserializer = new PropertyBasedSubTypeDeserializer(
+                AbstractTestRunRequest.class);
+        testRunRequestDeserializer.register(ApplyTestRunTemplateRequest.class, "testRunTemplateId");
+        testRunRequestDeserializer.register(StartTestRunRequest.class, "executableTestSuiteIds");
+        etfModule.addDeserializer(AbstractTestRunRequest.class, testRunRequestDeserializer);
 
         mapper.registerModule(etfModule);
 

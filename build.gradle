@@ -80,13 +80,13 @@ dependencies {
     compile group: 'net.sf.saxon', name: 'Saxon-HE', version: '9.7.0-21'
 
     compile group: 'de.interactive_instruments', name: 'ii-commons-util', version: '3.0.0' + project.snapshotSuffix
-    compile group: 'de.interactive_instruments.etf', name: 'etf-core', version: '1.1.1' + project.snapshotSuffix
+    compile group: 'de.interactive_instruments.etf', name: 'etf-core', version: '1.2.0' + project.snapshotSuffix
     compile group: 'de.interactive_instruments.etf', name: 'etf-spi', version: '1.0.2' + project.snapshotSuffix
     compile group: 'de.interactive_instruments.etf', name: 'etf-stdtot', version: '1.0.1' + project.snapshotSuffix
     compile group: 'de.interactive_instruments.etf', name: 'etf-nastot', version: '1.0.0' + project.snapshotSuffix
 
     // TODO remove in future versions, use SPI
-    compile group: 'de.interactive_instruments.etf', name: 'etf-bsxds', version: '2.0.2' + project.snapshotSuffix
+    compile group: 'de.interactive_instruments.etf', name: 'etf-bsxds', version: '2.1.0' + project.snapshotSuffix
 
     // Prepackaged test drivers
     // TODO download in future versions

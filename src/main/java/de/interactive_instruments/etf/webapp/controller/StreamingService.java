@@ -94,12 +94,19 @@ public class StreamingService {
             final Dao<? extends Dto> dao, final HttpServletRequest request, final HttpServletResponse response, final String id)
             throws IOException, ObjectWithIdNotFoundException {
         if (CacheControl.clientNeedsUpdate(dao, request, response)) {
-            final ServletOutputStream out = response.getOutputStream();
-            response.setContentType(MediaType.TEXT_XML_VALUE);
-            final OutputFormat xml = dao.getOutputFormats()
-                    .get(EidFactory.getDefault().createUUID(dao.getDtoType().getSimpleName() + "DsResult2Xml"));
-            dao.getById(EidConverter.toEid(id)).streamTo(xml, null, out);
+            asXml2(dao, request, response, id, null);
         }
+    }
+
+    void asXml2(
+            final Dao<? extends Dto> dao, final HttpServletRequest request, final HttpServletResponse response,
+            final String id, final Filter filter)
+            throws IOException, ObjectWithIdNotFoundException {
+        final ServletOutputStream out = response.getOutputStream();
+        response.setContentType(MediaType.TEXT_XML_VALUE);
+        final OutputFormat xml = dao.getOutputFormats()
+                .get(EidFactory.getDefault().createUUID(dao.getDtoType().getSimpleName() + "DsResult2Xml"));
+        dao.getById(EidConverter.toEid(id), filter).streamTo(xml, null, out);
     }
 
     private static String keyFor(final Dao<? extends Dto> dao, final Filter filter) {
@@ -150,15 +157,21 @@ public class StreamingService {
     }
 
     void asJson2(
-            final Dao<? extends Dto> dao, final HttpServletRequest request, final HttpServletResponse response, final String id)
-            throws IOException, ObjectWithIdNotFoundException {
+            final Dao<? extends Dto> dao, final HttpServletRequest request, final HttpServletResponse response,
+            final String id) throws IOException, ObjectWithIdNotFoundException {
         if (CacheControl.clientNeedsUpdate(dao, request, response)) {
-            final ServletOutputStream out = response.getOutputStream();
-            response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
-            final OutputFormat json = dao.getOutputFormats()
-                    .get(EidFactory.getDefault().createUUID(dao.getDtoType().getSimpleName() + "DsResult2Json"));
-            dao.getById(EidConverter.toEid(id)).streamTo(json, null, out);
+            asJson2(dao, request, response, id, null);
         }
+    }
+
+    void asJson2(
+            final Dao<? extends Dto> dao, final HttpServletRequest request, final HttpServletResponse response,
+            final String id, final Filter filter) throws IOException, ObjectWithIdNotFoundException {
+        final ServletOutputStream out = response.getOutputStream();
+        response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+        final OutputFormat json = dao.getOutputFormats()
+                .get(EidFactory.getDefault().createUUID(dao.getDtoType().getSimpleName() + "DsResult2Json"));
+        dao.getById(EidConverter.toEid(id), filter).streamTo(json, null, out);
     }
 
     void asJson2(

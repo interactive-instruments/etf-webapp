@@ -70,7 +70,7 @@ public class DataStorageService {
         dataStorage.release();
     }
 
-    <T extends Dto> Dao<T> getDao(final Class<T> dtoType) {
+    public <T extends Dto> Dao<T> getDao(final Class<T> dtoType) {
         return dataStorage.getDao(dtoType);
     }
 

@@ -19,14 +19,15 @@
  */
 package de.interactive_instruments.etf.webapp.dto;
 
-import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.TEST_RUN_LABEL_DESCRIPTION;
-import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.TEST_RUN_LABEL_EXAMPLE;
+import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.*;
+import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.EID_EXAMPLE;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,9 +39,10 @@ import de.interactive_instruments.etf.dal.dto.capabilities.TestRunTemplateDto;
 import de.interactive_instruments.etf.dal.dto.run.TestRunDto;
 import de.interactive_instruments.etf.dal.dto.run.TestTaskDto;
 import de.interactive_instruments.etf.dal.dto.test.ExecutableTestSuiteDto;
-import de.interactive_instruments.etf.model.EID;
 import de.interactive_instruments.etf.model.EidFactory;
+import de.interactive_instruments.etf.webapp.controller.DataStorageService;
 import de.interactive_instruments.etf.webapp.controller.LocalizableApiError;
+import de.interactive_instruments.etf.webapp.conversion.EidConverter;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
 
 import io.swagger.annotations.ApiModel;
@@ -50,13 +52,20 @@ import io.swagger.annotations.ApiModelProperty;
  * @author Jon Herrmann ( herrmann aT interactive-instruments doT de )
  */
 @JsonPropertyOrder({
+        "testRunTemplateId",
         "label",
-        "arguments"
+        "arguments",
+        "testObject"
 })
 @ApiModel(value = "ApplyTestRunTemplateRequest", description = "Apply a Test Run Template")
-public class ApplyTestRunTemplateRequest implements TestRunConverter {
+public class ApplyTestRunTemplateRequest extends AbstractTestRunRequest {
 
-    @ApiModelProperty(position = 0, value = TEST_RUN_LABEL_DESCRIPTION
+    @ApiModelProperty(value = EID_DESCRIPTION + ". ", example = EID_EXAMPLE, dataType = "String")
+    @JsonProperty(required = true)
+    @Pattern(regexp = EidConverter.EID_PATTERN, flags = {Pattern.Flag.CASE_INSENSITIVE})
+    private String testRunTemplateId;
+
+    @ApiModelProperty(position = 1, value = TEST_RUN_LABEL_DESCRIPTION
             + " Mandatory.", example = TEST_RUN_LABEL_EXAMPLE, dataType = "String", required = true)
     @JsonProperty(required = true)
     @NotNull(message = "{l.enter.label}")
@@ -71,13 +80,9 @@ public class ApplyTestRunTemplateRequest implements TestRunConverter {
             + " not reference a Test Object. If the Test Run Template has a reference, this property is silently ignored!"
             + " The simplified Test Object can either reference an existing Test Object or contain a new"
             + " Test Object definition which references a resource in the web."
-            + " See Test Object model for more information and the Implementation Notes for an complete example.", required = true)
+            + " See Test Object model for more information and the Implementation Notes for an complete example.")
     @JsonProperty
-    @NotNull(message = "{l.json.invalid.test.object}")
     private SimpleTestObject testObject;
-
-    @JsonIgnore
-    private EID testRunTemplateId;
 
     @JsonIgnore
     private PreparedDtoResolver<TestRunTemplateDto> testRunTemplateResolver;
@@ -87,8 +92,9 @@ public class ApplyTestRunTemplateRequest implements TestRunConverter {
 
     public ApplyTestRunTemplateRequest() {}
 
-    public ApplyTestRunTemplateRequest(final String label, final String testRunTemplate,
-            SimpleArguments arguments, final SimpleTestObject testObject) {
+    public ApplyTestRunTemplateRequest(final String label,
+            final SimpleArguments arguments,
+            final SimpleTestObject testObject) {
         this.label = label;
         this.arguments = arguments;
         this.testObject = testObject;
@@ -98,7 +104,7 @@ public class ApplyTestRunTemplateRequest implements TestRunConverter {
     public TestRunDto toTestRun()
             throws ObjectWithIdNotFoundException, IOException, URISyntaxException {
 
-        final TestRunTemplateDto testRunTemplateDto = testRunTemplateResolver.getById(testRunTemplateId)
+        final TestRunTemplateDto testRunTemplateDto = testRunTemplateResolver.getById(EidConverter.toEid(testRunTemplateId))
                 .getDto();
 
         final TestObjectDto testObject;
@@ -136,11 +142,9 @@ public class ApplyTestRunTemplateRequest implements TestRunConverter {
         return testRun;
     }
 
-    public void init(final EID testRunTemplateId,
-            final PreparedDtoResolver<TestRunTemplateDto> testRunTemplateResolver,
-            final PreparedDtoResolver<TestObjectDto> testObjectResolver) {
-        this.testRunTemplateId = testRunTemplateId;
-        this.testRunTemplateResolver = testRunTemplateResolver;
-        this.testObjectResolver = testObjectResolver;
+    public void inject(final DataStorageService dataStorageService) {
+        this.testRunTemplateResolver = dataStorageService.getDao(TestRunTemplateDto.class);
+        this.testObjectResolver = dataStorageService.getDao(TestObjectDto.class);
+        this.testObjectResolver = dataStorageService.getDao(TestObjectDto.class);
     }
 }
