@@ -38,8 +38,7 @@ import org.springframework.web.bind.annotation.*;
 import de.interactive_instruments.Credentials;
 import de.interactive_instruments.UriUtils;
 import de.interactive_instruments.etf.component.loaders.LoadingContext;
-import de.interactive_instruments.etf.dal.dao.Dao;
-import de.interactive_instruments.etf.dal.dao.WriteDao;
+import de.interactive_instruments.etf.dal.dao.*;
 import de.interactive_instruments.etf.dal.dto.capabilities.ResourceDto;
 import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectDto;
 import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectTypeDto;
@@ -53,6 +52,7 @@ import de.interactive_instruments.etf.model.capabilities.Resource;
 import de.interactive_instruments.etf.webapp.WebAppConstants;
 import de.interactive_instruments.etf.webapp.helpers.SimpleFilter;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
+import de.interactive_instruments.exceptions.StorageException;
 import de.interactive_instruments.exceptions.config.ConfigurationException;
 
 import io.swagger.annotations.ApiOperation;
@@ -64,7 +64,7 @@ import io.swagger.annotations.ApiResponses;
  * @author Jon Herrmann ( herrmann aT interactive-instruments doT de )
  */
 @RestController
-public class TestObjectTypeController {
+public class TestObjectTypeController implements PreparedDtoResolver<TestObjectTypeDto> {
 
     @Autowired
     private DataStorageService dataStorageService;
@@ -92,8 +92,20 @@ public class TestObjectTypeController {
         ((WriteDao) testObjectTypeDao).addAll(supportedTypes.values());
         loadingContext.getItemRegistry().register(supportedTypes.values());
 
-        streaming.prepareCache(testObjectTypeDao, new SimpleFilter());
+        streaming.prepareCache(testObjectTypeDao, SimpleFilter.allItems());
         logger.info("Test Object Type controller initialized");
+    }
+
+    @Override
+    public PreparedDto<TestObjectTypeDto> getById(final EID id, final Filter filter)
+            throws StorageException, ObjectWithIdNotFoundException {
+        return testObjectTypeDao.getById(id, filter);
+    }
+
+    @Override
+    public PreparedDtoCollection<TestObjectTypeDto> getByIds(final Set<EID> id, final Filter filter)
+            throws StorageException, ObjectWithIdNotFoundException {
+        return testObjectTypeDao.getByIds(id, filter);
     }
 
     public void checkAndResolveTypes(final TestObjectDto dto, final Set<EID> expectedTypes)
@@ -184,4 +196,5 @@ public class TestObjectTypeController {
             HttpServletResponse response) throws IOException, ObjectWithIdNotFoundException {
         streaming.asXml2(testObjectTypeDao, request, response, id);
     }
+
 }

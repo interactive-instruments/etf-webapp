@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import de.interactive_instruments.etf.dal.dao.PreparedDtoResolver;
 import de.interactive_instruments.etf.dal.dto.IncompleteDtoException;
 import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectDto;
+import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectTypeDto;
 import de.interactive_instruments.etf.dal.dto.capabilities.TestRunTemplateDto;
 import de.interactive_instruments.etf.dal.dto.test.ExecutableTestSuiteDto;
 import de.interactive_instruments.etf.model.EID;
@@ -62,6 +63,7 @@ import io.swagger.annotations.ApiModelProperty;
         "properties",
         "defaultParameterValues",
         "executableTestSuiteIds",
+        "testObjectTypeIds",
         "testObjectIds"
 })
 @ApiModel(value = "CreateTestRunTemplateRequest", description = "Create a Test Run Template")
@@ -69,29 +71,33 @@ public class CreateTestRunTemplateRequest {
 
     private final static Logger logger = LoggerFactory.getLogger(CreateTestRunTemplateRequest.class);
 
-    @ApiModelProperty(position = 0, value = TEST_RUN_LABEL_DESCRIPTION
+    @ApiModelProperty(value = TEST_RUN_LABEL_DESCRIPTION
             + " Mandatory.", example = TEST_RUN_LABEL_EXAMPLE, dataType = "String", required = true)
     @JsonProperty(required = true)
     @NotNull(message = "{l.enter.label}")
     private String label;
 
-    @ApiModelProperty(position = 1, value = "Additional descriptive properties as key value pairs."
-            + "See Implementation Notes for an complete example.")
+    @ApiModelProperty(position = 1, value = "Additional meta information as key value pairs."
+            + " See Implementation Notes for an complete example.")
     @JsonProperty
     private SimpleArguments properties;
 
     @ApiModelProperty(position = 2, value = "Default parameter values as key value pairs. "
-            + "See Implementation Notes for an complete example.")
+            + " See Implementation Notes for an complete example.")
     @JsonProperty
     private SimpleArguments defaultParameterValues;
 
-    @ApiModelProperty(position = 3, value = "TODO", required = true)
+    @ApiModelProperty(position = 3, value = "The Executable Test Suites that are executed with this template.", required = true)
     @JsonProperty
     private String[] executableTestSuiteIds;
 
-    @ApiModelProperty(position = 4, value = "TODO")
+    @ApiModelProperty(position = 4, value = "Restricts the Test Object Types that can be used with this template."
+            + " The passed Test Object Types must be compatible with the Executable Test Suites and the Test Object.")
     @JsonProperty
-    @NotNull(message = "{l.json.invalid.test.object}")
+    private String[] testObjectTypeIds;
+
+    @ApiModelProperty(position = 5, value = "Binds the template to one or multiple Test Objects.")
+    @JsonProperty()
     private String[] testObjectIds;
 
     @JsonIgnore
@@ -99,6 +105,9 @@ public class CreateTestRunTemplateRequest {
 
     @JsonIgnore
     private PreparedDtoResolver<TestObjectDto> testObjectResolver;
+
+    @JsonIgnore
+    private PreparedDtoResolver<TestObjectTypeDto> testObjectTypeResolver;
 
     public CreateTestRunTemplateRequest() {}
 
@@ -120,6 +129,14 @@ public class CreateTestRunTemplateRequest {
             executableTestSuites = etsResolver.getByIds(idStrsToEIDs(executableTestSuiteIds)).asList();
         } catch (ObjectWithIdNotFoundException e) {
             throw new LocalizableApiError(e);
+        }
+        if (testObjectTypeIds != null && testObjectTypeIds.length > 0) {
+            try {
+                testRunTemplate.setSupportedTestObjectTypes(
+                        testObjectTypeResolver.getByIds(idStrsToEIDs(testObjectTypeIds)).asList());
+            } catch (ObjectWithIdNotFoundException e) {
+                throw new LocalizableApiError(e);
+            }
         }
 
         final ParameterSet parameters = new ParameterSet();
@@ -150,6 +167,7 @@ public class CreateTestRunTemplateRequest {
                 }
             }
         }
+
         if (defaultParameterValues != null) {
             for (final Map.Entry<String, String> entry : defaultParameterValues.get().entrySet()) {
                 final Parameterizable.Parameter param = parameters.getParameter(entry.getKey());
@@ -195,8 +213,10 @@ public class CreateTestRunTemplateRequest {
 
     public void init(
             final PreparedDtoResolver<ExecutableTestSuiteDto> etsResolver,
+            final PreparedDtoResolver<TestObjectTypeDto> testObjectTypeResolver,
             final PreparedDtoResolver<TestObjectDto> testObjectResolver) {
         this.etsResolver = etsResolver;
         this.testObjectResolver = testObjectResolver;
+        this.testObjectTypeResolver = testObjectTypeResolver;
     }
 }

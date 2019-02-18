@@ -85,8 +85,8 @@ public class MetaTypeController {
         testItemTypeDao = dataStorageService.getDao(TestItemTypeDto.class);
         componentDao = dataStorageService.getDao(ComponentDto.class);
 
-        streaming.prepareCache(tagDao, new SimpleFilter());
-        streaming.prepareCache(translationTemplateBundleDao, new SimpleFilter());
+        streaming.prepareCache(tagDao, SimpleFilter.allItems());
+        streaming.prepareCache(translationTemplateBundleDao, SimpleFilter.allItems());
         logger.info("Meta Type controller initialized");
     }
 

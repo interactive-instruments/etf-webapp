@@ -91,7 +91,7 @@ public class EtsController {
         logger.info("Executable Test Suite controller initialized!");
 
         // Prepare cache
-        streaming.prepareCache(etsDao, new SimpleFilter("label,remoteResource,description,version,author,creationDate,"
+        streaming.prepareCache(etsDao, SimpleFilter.filterItems("label,remoteResource,description,version,author,creationDate,"
                 + "lastEditor,lastUpdateDate,tags,translationTemplateBundle,ParameterList,supportedTestObjectTypes,dependencies"));
     }
 
@@ -108,7 +108,7 @@ public class EtsController {
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException, ObjectWithIdNotFoundException {
-        streaming.asJson2(etsDao, request, response, new SimpleFilter(offset, limit, fields));
+        streaming.asJson2(etsDao, request, response, SimpleFilter.filterItems(offset, limit, fields));
     }
 
     @ApiOperation(value = "Get multiple Executable Test Suites as XML", notes = ETS_MODEL_DESCRIPTION, tags = {
@@ -123,7 +123,7 @@ public class EtsController {
             @ApiParam(value = FIELDS_DESCRIPTION) @RequestParam(required = false, defaultValue = "*") String fields,
             HttpServletRequest request,
             HttpServletResponse response) throws IOException, ObjectWithIdNotFoundException {
-        streaming.asXml2(etsDao, request, response, new SimpleFilter(offset, limit, fields));
+        streaming.asXml2(etsDao, request, response, SimpleFilter.filterItems(offset, limit, fields));
     }
 
     @ApiOperation(value = "Get Executable Test Suite as XML", notes = ETS_MODEL_DESCRIPTION, tags = {SERVICE_CAP_TAG_NAME})

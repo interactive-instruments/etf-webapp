@@ -20,13 +20,13 @@
 package de.interactive_instruments.etf.webapp.controller;
 
 import static de.interactive_instruments.etf.webapp.SwaggerConfig.SERVICE_CAP_TAG_NAME;
-import static de.interactive_instruments.etf.webapp.SwaggerConfig.TEST_RUNS_TAG_NAME;
 import static de.interactive_instruments.etf.webapp.WebAppConstants.API_BASE_URL;
 import static de.interactive_instruments.etf.webapp.controller.EtfConfigController.ETF_TEST_RUN_TEMPLATES_ALLOW_CREATION;
 import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.*;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
@@ -41,20 +41,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import de.interactive_instruments.etf.dal.dao.Dao;
-import de.interactive_instruments.etf.dal.dao.WriteDao;
+import de.interactive_instruments.etf.dal.dao.*;
 import de.interactive_instruments.etf.dal.dto.IncompleteDtoException;
 import de.interactive_instruments.etf.dal.dto.capabilities.TestRunTemplateDto;
 import de.interactive_instruments.etf.model.EID;
 import de.interactive_instruments.etf.webapp.conversion.EidConverter;
 import de.interactive_instruments.etf.webapp.dto.ApiError;
-import de.interactive_instruments.etf.webapp.dto.ApplyTestRunTemplateRequest;
 import de.interactive_instruments.etf.webapp.dto.CreateTestRunTemplateRequest;
 import de.interactive_instruments.etf.webapp.helpers.SimpleFilter;
 import de.interactive_instruments.etf.webapp.helpers.User;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
+import de.interactive_instruments.exceptions.StorageException;
 import de.interactive_instruments.exceptions.config.ConfigurationException;
-import de.interactive_instruments.exceptions.config.InvalidPropertyException;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -65,7 +63,7 @@ import io.swagger.annotations.ApiResponses;
  * Controller for creating Test Run Template and applying them to Test Objects
  */
 @RestController
-public class TestRunTemplateController {
+public class TestRunTemplateController implements PreparedDtoResolver<TestRunTemplateDto> {
 
     @Autowired
     DataStorageService dataStorageService;
@@ -74,10 +72,10 @@ public class TestRunTemplateController {
     private TestObjectController testObjectController;
 
     @Autowired
-    private TestDriverController testDriverController;
+    private TestObjectTypeController testObjectTypeController;
 
     @Autowired
-    private TestRunController testRunController;
+    private TestDriverController testDriverController;
 
     @Autowired
     private EtfConfigController etfConfig;
@@ -108,6 +106,18 @@ public class TestRunTemplateController {
         logger.info("Test Run Template controller initialized!");
     }
 
+    @Override
+    public PreparedDto<TestRunTemplateDto> getById(final EID id, final Filter filter)
+            throws StorageException, ObjectWithIdNotFoundException {
+        return testRunTemplateDao.getById(id, filter);
+    }
+
+    @Override
+    public PreparedDtoCollection<TestRunTemplateDto> getByIds(final Set<EID> id, final Filter filter)
+            throws StorageException, ObjectWithIdNotFoundException {
+        return testRunTemplateDao.getByIds(id, filter);
+    }
+
     //
     // Rest interfaces
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -116,21 +126,24 @@ public class TestRunTemplateController {
             SERVICE_CAP_TAG_NAME})
     @RequestMapping(value = {TEST_RUN_TEMPLATES_URL + "/{id}",
             TEST_RUN_TEMPLATES_URL + "/{id}.json"}, method = RequestMethod.GET, produces = "application/json")
-    public void testObjectByIdJson(@PathVariable String id, @RequestParam(required = false) String search,
+    public void testObjectByIdJson(
+            @ApiParam(value = "ID of Test Run Template that needs to be fetched", example = "EID-1ffe6ea2-5c29-4ce9-9a7e-f4d9d71119e8", required = true) @PathVariable String id,
+            @ApiParam(value = FIELDS_DESCRIPTION) @RequestParam(required = false, defaultValue = "*") String fields,
             HttpServletRequest request, HttpServletResponse response)
             throws IOException, LocalizableApiError, ObjectWithIdNotFoundException {
-        streaming.asJson2(testRunTemplateDao, request, response, id);
+        streaming.asJson2(testRunTemplateDao, request, response, id, SimpleFilter.singleItemFilter(fields));
     }
 
     @ApiOperation(value = "Get multiple Test Run Templates as JSON", notes = TEST_RUN_TEMPLATE_DESC, tags = {
             SERVICE_CAP_TAG_NAME})
     @RequestMapping(value = {TEST_RUN_TEMPLATES_URL, TEST_RUN_TEMPLATES_URL + ".json"}, method = RequestMethod.GET)
-    public void listTestObjectsJson(
+    public void listTestRunTemplatesJson(
             @ApiParam(value = OFFSET_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int offset,
             @ApiParam(value = LIMIT_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int limit,
+            @ApiParam(value = FIELDS_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") String fields,
             HttpServletRequest request,
-            HttpServletResponse response) throws IOException, ObjectWithIdNotFoundException {
-        streaming.asJson2(testRunTemplateDao, request, response, new SimpleFilter(offset, limit));
+            HttpServletResponse response) throws IOException {
+        streaming.asJson2(testRunTemplateDao, request, response, SimpleFilter.filterItems(offset, limit, fields));
     }
 
     @ApiOperation(value = "Get multiple Test Run Templates as XML", notes = TEST_RUN_TEMPLATE_DESC, tags = {
@@ -139,12 +152,13 @@ public class TestRunTemplateController {
             @ApiResponse(code = 200, message = "EtfItemCollection with multiple Test Run Templates")
     })
     @RequestMapping(value = {TEST_RUN_TEMPLATES_URL + ".xml"}, method = RequestMethod.GET)
-    public void listTestObjectXml(
-            @RequestParam(required = false, defaultValue = "0") int offset,
-            @RequestParam(required = false, defaultValue = "0") int limit,
+    public void listTestRunTemplatesXml(
+            @ApiParam(value = OFFSET_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int offset,
+            @ApiParam(value = LIMIT_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int limit,
+            @ApiParam(value = FIELDS_DESCRIPTION) @RequestParam(required = false, defaultValue = "*") String fields,
             HttpServletRequest request,
-            HttpServletResponse response) throws IOException, ObjectWithIdNotFoundException {
-        streaming.asXml2(testRunTemplateDao, request, response, new SimpleFilter(offset, limit));
+            HttpServletResponse response) throws IOException {
+        streaming.asXml2(testRunTemplateDao, request, response, SimpleFilter.filterItems(offset, limit, fields));
     }
 
     @ApiOperation(value = "Get Test Run Template as XML", notes = TEST_RUN_TEMPLATE_DESC, tags = {
@@ -154,11 +168,12 @@ public class TestRunTemplateController {
             @ApiResponse(code = 404, message = "Test Run Template not found")
     })
     @RequestMapping(value = {TEST_RUN_TEMPLATES_URL + "/{id}.xml"}, method = RequestMethod.GET)
-    public void testObjectByIdXml(
+    public void testRunTemplateByIdXml(
             @ApiParam(value = "ID of Test Run Template that needs to be fetched", example = "EID-1ffe6ea2-5c29-4ce9-9a7e-f4d9d71119e8", required = true) @PathVariable String id,
+            @ApiParam(value = FIELDS_DESCRIPTION) @RequestParam(required = false, defaultValue = "*") String fields,
             HttpServletRequest request, HttpServletResponse response)
             throws IOException, ObjectWithIdNotFoundException, LocalizableApiError {
-        streaming.asXml2(testRunTemplateDao, request, response, id);
+        streaming.asXml2(testRunTemplateDao, request, response, id, SimpleFilter.singleItemFilter(fields));
     }
 
     @ApiOperation(value = "Check if the Test Run Template exists", notes = TEST_RUN_TEMPLATE_DESC, tags = {
@@ -176,95 +191,17 @@ public class TestRunTemplateController {
                 : new ResponseEntity(HttpStatus.NOT_FOUND);
     }
 
-    @ApiOperation(value = "Start a new Test Run", notes = "Start a new Test Run by specifying one Test Run Template "
-            + "that shall be used to test one Test Object against a set of Executable Test Suites with "
-            + "specified test parameters. "
-            + "An existing Test Object can be referenced by setting the 'id' in the ApplyTestRunTemplateRequest's "
-            + "'testObject' property. "
-            + "If data do not need to be uploaded or a web service is tested, a temporary Test Object "
-            + "can be created directly with this interface, by defining at least the "
-            + "'resources' property of the 'testObject' but then the 'id' property must be omitted."
-            + "\n\n"
-            + "Example for starting a Test Run with a Test Run Template for service Tests:  <br/>"
-            + "\n\n"
-            + "    {\n"
-            + "        \"label\": \"Test run on 15:00 - 01.01.2017 with all Download Services Conformance Classes\",\n"
-            + "        \"testRunTemplate\": [\"EID994edf55-699b-446c-968c-1892a4d8d000\"],\n"
-            + "        \"arguments\": {},\n"
-            + "        \"testObject\": {\n"
-            + "            \"resources\": {\n"
-            + "                \"serviceEndpoint\": \"http://example.com/service?request=GetCapabilities&service=WFS\"\n"
-            + "            }\n"
-            + "        }\n"
-            + "    }\n"
-            + "\n\n"
-            + "Example for starting a Test Run with a Test Run Template for a file-based Test, using an existing Test Object:<br/>"
-            + "\n\n"
-            + "    {\n"
-            + "        \"label\": \"Test run on 15:00 - 01.01.2017 with all Metadata Conformance Classes\",\n"
-            + "        \"testRunTemplate\": [\"EID942edf55-069b-44a6-12f3-1892a4d8d949\"],\n"
-            + "        \"arguments\": {\n"
-            + "            \"files_to_test\": \".*\",\n"
-            + "            \"tests_to_execute\": \".*\"\n"
-            + "        },\n"
-            + "        \"testObject\": {\n"
-            + "            \"id\": \"8cdd7fab-0c02-4f9e-b957-b40b7d3d22e0\"\n"
-            + "        }\n"
-            + "    }\n"
-            + "\n\n"
-            + "Where \"EID8cdd7fab-0c02-4f9e-b957-b40b7d3d22e0\" is the ID of a previously created Test Object. If the "
-            + "Test Object does not exist, a 404 error is thrown. The IDs of Temporary Test Objects are not accepted. "
-            + "\n\n"
-            + "Example for starting a Test Run with a Test Run Template for a file-based Test, , referencing Test data in the web:<br/>"
-            + "\n\n"
-            + "    {\n"
-            + "        \"label\": \"Test run on 15:00 - 01.01.2017 with all Metadata Conformance Classes\",\n"
-            + "        \"testRunTemplate\": [\"EID942edf55-069b-44a6-12f3-1892a4d8d949\"],\n"
-            + "        \"arguments\": {\n"
-            + "            \"files_to_test\": \".*\",\n"
-            + "            \"tests_to_execute\": \".*\"\n"
-            + "        },\n"
-            + "        \"testObject\": {\n"
-            + "            \"resources\": {\n"
-            + "                \"data\": \"http://example.com/test-data.xml\"\n"
-            + "            }\n"
-            + "        }\n"
-            + "    }\n"
-            + "\n\n", tags = {TEST_RUNS_TAG_NAME})
-    @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Test Run Template applied"),
-            @ApiResponse(code = 400, message = "Invalid request", response = ApiError.class),
-            @ApiResponse(code = 404, message = "Test Run Template or Test Object with ID not found", response = ApiError.class),
-            @ApiResponse(code = 409, message = "Test Object already in use", response = ApiError.class),
-            @ApiResponse(code = 500, message = "Internal error", response = ApiError.class),
-    })
-    @RequestMapping(value = TEST_RUN_TEMPLATES_URL + "/{id}", method = RequestMethod.POST)
-    public void start(
-            @ApiParam(value = "Test Run Template ID. "
-                    + EID_DESCRIPTION, example = EID_EXAMPLE, required = true) @PathVariable String id,
-            @RequestBody @Valid ApplyTestRunTemplateRequest testRunTemplateRequest, BindingResult result,
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws LocalizableApiError, InvalidPropertyException {
-
-        if (result.hasErrors()) {
-            throw new LocalizableApiError(result.getFieldError());
-        }
-
-        testRunTemplateRequest.init(EidConverter.toEid(id), testRunTemplateDao, testObjectController);
-        testRunController.startTestRun(testRunTemplateRequest, request, response);
-    }
-
     @ApiOperation(value = "Create a new Test Run Template", notes = "Please note that this function can be deactivated by the Administrator and the interface then always responds"
             + " with a 403 status code. A Test Run Template bundles a set of Executable Test Suites,"
-            + " including their descriptive properties and arguments, and allows them to be applied to test objects. "
-            + " The Test Object can be overwritten when the template is applied, or it can be fixed when the "
-            + " Test Run Template is created."
-            + " If more than one Executable Test Suites is specified during creation, then there must be at least one "
+            + " including their descriptive properties and arguments, and allows them to be applied to test objects."
+            + " At least one Executable Test Suite must be specified during creation."
+            + " If more than one Executable Test Suites is specified, then there must be at least one"
             + " Test Object Type that is supported by all Executable Test Suites."
             + " If a fixed Test Object is provided its type must of course also be supported."
-            + " Arguments and descriptive properties for the template are automatically taken from all "
-            + " Executable Test Suites. If there are Parameters with the same name but different default values "
+            + " Specifying the test object is optional and if it was specified when the template was created, it can no longer"
+            + " be overwritten. Otherwise, the test object must be specified if the template is applied."
+            + " Arguments for the template are automatically taken from all Executable Test Suites."
+            + " If there are Parameters with the same name but different default values"
             + " in two Executable Test Suites, these must be explicitly overridden."
             + " Properties are only adopted in the Test Run Template if they are identical in all Executable Test Suites. "
             + " Otherwise, they must be specified explicitly."
@@ -287,11 +224,12 @@ public class TestRunTemplateController {
             @ApiResponse(code = 201, message = "Test Run Template created"),
             @ApiResponse(code = 400, message = "Invalid request", response = ApiError.class),
             @ApiResponse(code = 403, message = "Test Run Template creation deactivated", response = ApiError.class),
+            @ApiResponse(code = 404, message = "At least one specified Executable Test Suite, a Test Object Type or a Test Object could not be found", response = ApiError.class),
             @ApiResponse(code = 409, message = "Type of the Test Object not supported by the Executable Test Suites or"
                     + " due to a conflict, Parameters with different default values must be explicitly overwritten", response = ApiError.class),
             @ApiResponse(code = 500, message = "Internal error", response = ApiError.class),
     })
-    @RequestMapping(value = TEST_RUN_TEMPLATES_URL, method = RequestMethod.PUT)
+    @RequestMapping(value = TEST_RUN_TEMPLATES_URL, method = RequestMethod.POST)
     public void create(@RequestBody @Valid CreateTestRunTemplateRequest createTestRunTemplateRequest,
             BindingResult result,
             HttpServletRequest request,
@@ -305,14 +243,17 @@ public class TestRunTemplateController {
             throw new LocalizableApiError(result.getFieldError());
         }
 
-        createTestRunTemplateRequest.init(testDriverController, testObjectController);
+        createTestRunTemplateRequest.init(testDriverController, testObjectTypeController, testObjectController);
         final TestRunTemplateDto testRunTemplate = createTestRunTemplateRequest.toTestRunTemplate();
         testRunTemplate.setAuthor(User.getUser(request));
         testRunTemplate.ensureBasicValidity();
         ((WriteDao<TestRunTemplateDto>) this.testRunTemplateDao).add(testRunTemplate);
 
         response.setStatus(HttpStatus.CREATED.value());
-        streaming.asJson2(testRunTemplateDao, request, response, testRunTemplate.getId().getId());
+        streaming.asJson2(testRunTemplateDao,
+                request,
+                response,
+                testRunTemplate.getId().getId(),
+                SimpleFilter.singleItemFilter("id"));
     }
-
 }

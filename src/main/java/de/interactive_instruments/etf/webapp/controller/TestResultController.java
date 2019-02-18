@@ -166,7 +166,7 @@ public class TestResultController {
             int removed = 0;
             try {
                 // TODO filter dtos by timestamp
-                final PreparedDtoCollection<TestRunDto> allTestRuns = testRunDao.getAll(new SimpleFilter());
+                final PreparedDtoCollection<TestRunDto> allTestRuns = testRunDao.getAll(SimpleFilter.allItems());
                 for (final TestRunDto testRunDto : allTestRuns) {
                     if (removeTestRun(testRunDto, unit.toMillis(maxLifeTime))) {
                         removed++;
@@ -175,7 +175,7 @@ public class TestResultController {
             } catch (BsxPreparedDtoException | StorageException e) {
                 logger.warn("Using fallback mechanism for safe deletion");
                 try {
-                    final Set<EID> allTestRuns = testRunDao.getAll(new SimpleFilter()).keySet();
+                    final Set<EID> allTestRuns = testRunDao.getAll(SimpleFilter.allItems()).keySet();
                     for (final EID id : allTestRuns) {
                         try {
                             final TestRunDto testRunDto = testRunDao.getById(id).getDto();
@@ -213,7 +213,7 @@ public class TestResultController {
                 this.testRunHtmlReportFormat = outputFormat;
             }
         }
-        streaming.prepareCache(testRunDao, new SimpleFilter());
+        streaming.prepareCache(testRunDao, SimpleFilter.allItems());
 
         final long exp = etfConfig.getPropertyAsLong(EtfConfigController.ETF_TESTREPORTS_LIFETIME_EXPIRATION);
         if (exp > 0) {

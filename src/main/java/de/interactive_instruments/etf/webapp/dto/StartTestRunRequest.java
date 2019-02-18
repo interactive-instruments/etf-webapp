@@ -37,6 +37,7 @@ import de.interactive_instruments.etf.dal.dto.run.TestRunDto;
 import de.interactive_instruments.etf.dal.dto.run.TestTaskDto;
 import de.interactive_instruments.etf.dal.dto.test.ExecutableTestSuiteDto;
 import de.interactive_instruments.etf.model.EidFactory;
+import de.interactive_instruments.etf.webapp.controller.DataStorageService;
 import de.interactive_instruments.etf.webapp.conversion.EidConverter;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
 
@@ -52,7 +53,7 @@ import io.swagger.annotations.ApiModelProperty;
         "arguments"
 })
 @ApiModel(value = "StartTestRunRequest", description = "Start a test run")
-public class StartTestRunRequest implements TestRunConverter {
+public class StartTestRunRequest extends AbstractTestRunRequest {
 
     @ApiModelProperty(position = 0, value = TEST_RUN_LABEL_DESCRIPTION
             + " Mandatory.", example = TEST_RUN_LABEL_EXAMPLE, dataType = "String", required = true)
@@ -139,9 +140,8 @@ public class StartTestRunRequest implements TestRunConverter {
         return testRun;
     }
 
-    public void setResolvers(final PreparedDtoResolver<ExecutableTestSuiteDto> etsResolver,
-            final PreparedDtoResolver<TestObjectDto> testObjectResolver) {
-        this.etsResolver = etsResolver;
-        this.testObjectResolver = testObjectResolver;
+    public void inject(final DataStorageService dataStorageService) {
+        this.etsResolver = dataStorageService.getDao(ExecutableTestSuiteDto.class);
+        this.testObjectResolver = dataStorageService.getDao(TestObjectDto.class);
     }
 }

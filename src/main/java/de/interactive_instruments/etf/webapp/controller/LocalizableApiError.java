@@ -171,8 +171,8 @@ public class LocalizableApiError extends LocalizableError {
         super("l.json.mapping.error", e,
                 e.getLocation().getLineNr(),
                 e.getLocation().getColumnNr(),
-                e.getPath().get(0).getFieldName(),
-                e.getPath().get(0).getFrom().getClass().getSimpleName(),
+                e.getPath().isEmpty() ? "0" : e.getPath().get(0).getFieldName(),
+                e.getPath().isEmpty() ? "unknown" : e.getPath().get(0).getFrom().getClass().getSimpleName(),
                 e.getMessage().indexOf("\n at [") != 0 ? e.getMessage().substring(0, e.getMessage().indexOf("\n at ["))
                         : "unknown"
 
