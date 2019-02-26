@@ -94,7 +94,7 @@
                 <span style="vertical-align: sub; float: left" ><%= executableTestSuite.label %></span>
                 <span class="ii-stop-propagation" style="float: right">
                     <!--input class="executable-test-suite-selection" data-role="flipswitch" type="checkbox" data-on-text="use" data-off-text="X" data-mini="true" value="<%= executableTestSuite.id %>" /-->
-                    <select class="executable-test-suite-selection <%= testObjectTypeClasses %>" data-role="flipswitch" type="checkbox" data-mini="true">
+                    <select class="executable-test-suite-selection <%= testObjectTypeClasses.join(',') %>" data-role="flipswitch" type="checkbox" data-mini="true">
                         <option value="X">use</option>
                         <option value="<%= executableTestSuite.id %>"></option>
                     </select>
@@ -244,8 +244,8 @@
                            title="<%= p.description %>"
                            pattern="<%= p.allowedValues %>"
                            value="<%- p.defaultValue %>"/>
-                    <% }); %>
                 </div>
+                <% }); %>
             </div>
         <% } else { %>
             <h4 class="optional-parameter" style="display: none">[[#{l.Test.Suite.Parameters}]]</h4>

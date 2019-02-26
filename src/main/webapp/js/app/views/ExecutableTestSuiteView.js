@@ -52,11 +52,11 @@ define([
                     var i = $(".executable-test-suite-selection option[value!='X']:selected").length;
                     if (i == 0) {
                         $('#fadin-start-tests-button').hide('scale');
-                        $('.executable-test-suite-selection' +
+                        $('.executable-test-suite-selection ' +
                             v2.getClassNamesForNotSelection(this, "test-object-type-")).parent().removeClass("ui-disabled");
                     } else if (i == 1) {
                         $('#fadin-start-tests-button').show('scale');
-                        $('.executable-test-suite-selection' +
+                        $('.executable-test-suite-selection ' +
                             v2.getClassNamesForNotSelection(this, "test-object-type-")).parent().addClass("ui-disabled");
                     }
                 });

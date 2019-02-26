@@ -36,7 +36,7 @@ public class SimpleFilter implements Filter {
 
     private SimpleFilter(final int offset, final int limit, final String fields) {
         this.offset = offset > 0 ? offset : 0;
-        this.limit = limit >= 0 && limit < 5000 ? limit : 1500;
+        this.limit = limit > 0 && limit < 5000 ? limit : 1500;
         this.fields = fields != null ? fields.trim() : "*";
     }
 
@@ -49,7 +49,7 @@ public class SimpleFilter implements Filter {
     }
 
     public static Filter filterItems(final int offset, final int limit, final String fields) {
-        return new SimpleFilter(offset, limit > 0 && limit < 5000 ? limit : 1500, fields);
+        return new SimpleFilter(offset, limit, fields);
     }
 
     public static Filter singleItemFilter(final String fields) {

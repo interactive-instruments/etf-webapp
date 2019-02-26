@@ -65,12 +65,15 @@ define([
                 //add properties
                 var parameters = e.getParameters();
                 if(!_.isUndefined(parameters) && parameters != null) {
-                    v2.jeach(parameters, function(p) {
-                        if(p.required) {
-                            _this.requiredParameters[p.name]=p;
-                        }else if(_.isUndefined(_this.requiredParameters[p.name])){
-                            // add to optional parameters if not a required parameter for another ETS
-                            _this.optionalParameters[p.name]=p;
+                    v2.jeach(_.orderBy(parameters, ['required', 'name']), function(p) {
+                        console.log(p);
+                        if(!p.static && p.type != 'file-resource') {
+                            if(p.required) {
+                                _this.requiredParameters[p.name]=p;
+                            }else if(_.isUndefined(_this.requiredParameters[p.name])){
+                                // add to optional parameters if not a required parameter for another ETS
+                                _this.optionalParameters[p.name]=p;
+                            }
                         }
                     });
                 }
