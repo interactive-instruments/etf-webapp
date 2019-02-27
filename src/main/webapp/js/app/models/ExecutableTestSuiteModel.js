@@ -57,12 +57,15 @@ define([
                         if(!_.isUndefined(translationTemplateBundle) && value!=null) {
                             _.each(value.parameter, function(p, i) {
                                 if(p != null) {
-                                    if(!_.isUndefined(p.description)) {
+                                    var t;
+                                    if(_.isUndefined(p.description)) {
+                                        p.description = translationTemplateBundle.getTranslation('TR.parameter.description.'+p.name);
+                                    }else if(!_.isUndefined(p.description.ref)) {
                                         p.description=translationTemplateBundle.getTranslation(p.description.ref);
-                                    }else{
-                                        p.description=translationTemplateBundle.getTranslation('TR.parameter.description.'+p.name);
                                     }
-                                    p.label=translationTemplateBundle.getTranslation('TR.parameter.name.'+p.name);
+                                    if(_.isUndefined(p.label)) {
+                                        p.label=translationTemplateBundle.getTranslation('TR.parameter.name.'+p.name);
+                                    }
                                 }
                             });
                         }
