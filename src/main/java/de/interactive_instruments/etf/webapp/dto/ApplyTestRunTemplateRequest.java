@@ -142,7 +142,8 @@ public class ApplyTestRunTemplateRequest extends AbstractTestRunRequest {
         return testRun;
     }
 
-    public void inject(final PreparedDtoResolver<TestObjectDto> testObjectResolver, final DataStorageService dataStorageService) {
+    public void inject(final PreparedDtoResolver<TestObjectDto> testObjectResolver,
+            final DataStorageService dataStorageService) {
         this.testRunTemplateResolver = dataStorageService.getDao(TestRunTemplateDto.class);
         this.testObjectResolver = testObjectResolver;
     }
