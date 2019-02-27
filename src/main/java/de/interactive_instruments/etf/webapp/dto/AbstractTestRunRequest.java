@@ -22,6 +22,8 @@ package de.interactive_instruments.etf.webapp.dto;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import de.interactive_instruments.etf.dal.dao.PreparedDtoResolver;
+import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectDto;
 import de.interactive_instruments.etf.dal.dto.run.TestRunDto;
 import de.interactive_instruments.etf.webapp.controller.DataStorageService;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
@@ -30,7 +32,7 @@ import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
  * @author Jon Herrmann ( herrmann aT interactive-instruments doT de )
  */
 public abstract class AbstractTestRunRequest {
-    public abstract void inject(final DataStorageService dataStorageService);
+    public abstract void inject(final PreparedDtoResolver<TestObjectDto> testObjectResolver, final DataStorageService dataStorageService);
 
     public abstract TestRunDto toTestRun() throws ObjectWithIdNotFoundException, IOException, URISyntaxException;
 }
