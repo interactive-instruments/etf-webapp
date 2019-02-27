@@ -28,16 +28,19 @@ define([
     var Model = Backbone.Model.extend( {
 
         initialize: function( attr, options ) {
+            if (!_.isUndefined(attr.parent)) {
+                this.set("parent", attr.parent);
+            }
         },
 
-        getTranslation: function(name, language) {
-            var translationTemplateCollections = this.get('translationTemplateCollections');
+        getTranslationFromCol : function(name, collection) {
             var r;
-            if(!_.isUndefined(translationTemplateCollections)) {
-                _.each(translationTemplateCollections.LangTranslationTemplateCollection, function (c,i) {
+            if(!_.isUndefined(collection)) {
+                _.each(collection.LangTranslationTemplateCollection, function (c,i) {
                     if(c.name==name) {
+                        var userLang = navigator.language || navigator.userLanguage;
                         return v2.jeach(c.translationTemplates.TranslationTemplate, function (t,i) {
-                            if(t.language==language) {
+                            if(userLang.lastIndexOf(t.language, 0) === 0) {
                                 r=t.$
                                 return false;
                             }
@@ -47,6 +50,20 @@ define([
             }
             return r;
         },
+
+        // toJSON do not generate JSON to speed up things
+
+        getTranslation: function(name) {
+            // most likely this is store in the parent templates
+            var parentColl = v2.resolveRef(this.get('parent'), this.collection);
+            if(!_.isUndefined(parentColl)) {
+                var r = this.getTranslationFromCol(name, parentColl.translationTemplateCollections);
+                if (!_.isUndefined(r)) {
+                    return r;
+                }
+            }
+            return this.getTranslationFromCol(name, this.get('translationTemplateCollections'));
+        }
     } );
 
     // Returns the Model class

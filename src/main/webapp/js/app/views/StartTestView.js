@@ -26,7 +26,6 @@ define([
     "etf.webui/v2",
     "etf.webui/views/EtfView",
     "jquery.fileupload",
-    "jquery.validate",
     "../models/ExecutableTestSuiteModel"
 ], function( $, Backbone, moment, toastr, v2, EtfView, fileUpload, ExecutableTestSuiteModel ) {
 
@@ -66,7 +65,6 @@ define([
                 var parameters = e.getParameters();
                 if(!_.isUndefined(parameters) && parameters != null) {
                     v2.jeach(_.orderBy(parameters, ['required', 'name']), function(p) {
-                        console.log(p);
                         if(!p.static && p.type != 'file-resource') {
                             if(p.required) {
                                 _this.requiredParameters[p.name]=p;
@@ -287,7 +285,7 @@ define([
             // Input validation
             var testRunLabelInput = $('#testRunLabel');
             // note: dom is modified by jqm
-            var requiredParameterInputs = $('div.required-parameter > div.ui-field-contain > input');
+            var requiredParameterInputs = $('div.required-parameter > div.ui-field-contain > div.ui-input-text > input');
 
             var errors=false;
             var testRunLabel = $.trim(testRunLabelInput.val());
@@ -322,6 +320,9 @@ define([
                     var decP = $(p);
                     if ($.trim(decP.val()).length < 1) {
                         v2.invalidInputError("Required parameter not set", decP);
+                        errors=true;
+                    }else if(!p.checkValidity()) {
+                        v2.invalidInputError("Invalid parameter value", decP);
                         errors=true;
                     }
                 })

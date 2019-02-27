@@ -39,6 +39,7 @@ define([
             var attributes = _.clone(this.attributes);
             var translationTemplateRef =  this.get("translationTemplateBundle");
             var translationTemplateBundle;
+            // do not generate JSON to speed up things
             if(!_.isUndefined(translationTemplateRef)) {
                 translationTemplateBundle = v2.resolveRef(
                     translationTemplateRef.href, this.translationTemplateBundleCollection, function(r) { return r; });
@@ -55,9 +56,13 @@ define([
                     case 'ParameterList':
                         if(!_.isUndefined(translationTemplateBundle) && value!=null) {
                             _.each(value.parameter, function(p, i) {
-                                if(p != null && !_.isUndefined(p.description)) {
-                                    var translation = translationTemplateBundle.getTranslation(p.description.ref, "en")
-                                    p.translation=translation;
+                                if(p != null) {
+                                    if(!_.isUndefined(p.description)) {
+                                        p.description=translationTemplateBundle.getTranslation(p.description.ref);
+                                    }else{
+                                        p.description=translationTemplateBundle.getTranslation('TR.parameter.description.'+p.name);
+                                    }
+                                    p.label=translationTemplateBundle.getTranslation('TR.parameter.name.'+p.name);
                                 }
                             });
                         }

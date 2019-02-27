@@ -55,7 +55,7 @@
                 combinable for a Test Run. Additional information about a Test Suite will be shown with a click on the plus button.</p>
 
             <ul id="executable-test-suite-listview-container" data-role="listview"
-                data-inset="true" class="ui-listview-outer" data-filter="true" data-autodividers="true" th:data-filter-placeholder="Filter Executable Test Suites...">
+                data-inset="true" class="ui-listview-outer" data-filter="true" data-autodividers="true" data-filter-placeholder="Filter Executable Test Suites..." th:attr="data-filter-placeholder=#{l.Filter.Executable.Test.Suites}">
                 <!-- Container for template -->
             </ul>
         </div>
@@ -146,7 +146,7 @@
 </script>
 
 
-<div tiles:fragment="start-tests-page" id="start-tests-dialog" data-role="dialog" data-title="Start Tests" th:data-title="#{l.Configure.Test.Run}">
+<div tiles:fragment="start-tests-page" id="start-tests-dialog" data-role="dialog" data-title="Start Tests" th:attr="data-title=#{l.Configure.Test.Run}">
     <div data-role="header" role="banner">
         <h2 th:text="#{l.Configure.Test.Run}">Configure Test Run</h2>
     </div>
@@ -183,14 +183,14 @@
             [[#{l.Label}]]:
             <span class="question" help="[[#{l.help.Label}]]"> ?</span>
         </label>
-        <input data-inline="true" id="testRunLabel" type="text" title="[[#{l.help.Label}]]" value="<%= defaultLabel %>"/>
+        <input data-inline="true" id="testRunLabel" type="text" title="[[#{l.help.Label}]]" value="<%= defaultLabel %>" required/>
     </div>
 
 
     <% if( serviceTest) { %>
         <div class="ui-field-contain">
             <label for="serviceEndpoint">Service URL</label>
-            <input class="testObjectResourceInput" data-validation="url" type="url" id="serviceEndpoint" value="http://"/>
+            <input class="testObjectResourceInput" data-validation="url" type="url" id="serviceEndpoint" value="http://" required/>
         </div>
     <% } else { %>
         <div id="uploadTestObj" data-role="fieldcontain">
@@ -237,13 +237,20 @@
                 <% _.each( requiredParameters, function( p ) { %>
                 <div class="ui-field-contain">
                     <label for="ets-parameter-<%= p.name %>">
-                        <%=!_.isUndefined(p.label) ? label : v2.beautifyNerdyStr(p.name) %>
-                        <span class="question" help="Mandatory parameter. <%= p.translation %>"> ?</span>
+                        <%=!_.isUndefined(p.label) ? p.label : v2.beautifyNerdyStr(p.name) %>
+                        <span class="question" help="[[#{l.Mandatory.Parameter}]]. <%= p.description %>" > ?</span>
                     </label>
+                    <% if(p.type=='boolean') { %>
+                    <select class="ets-parameter" id="ets-parameter-<%= p.name %>" name="<%= p.name %>">
+                        <option value="false" <%= p.defaultValue==false ? 'selected' :  '' %> >[[#{l.false}]]</option>
+                        <option value="true" <%= p.defaultValue==true ? 'selected' :  '' %> >[[#{l.true}]]</option>
+                    </select>
+                    <% } else { %>
                     <input type="text" class="ets-parameter" id="ets-parameter-<%= p.name %>" name="<%= p.name %>"
-                           title="<%= p.description %>"
-                           pattern="<%= p.allowedValues %>"
-                           value="<%- p.defaultValue %>"/>
+                           title="[[#{l.Mandatory.Parameter}]]. <%= p.description %>"
+                           pattern="<%= p.allowedValues %>" required
+                           value="<%= p.defaultValue %>"/>
+                    <% } %>
                 </div>
                 <% }); %>
             </div>
@@ -254,13 +261,20 @@
                 <% _.each( optionalParameters, function( p ) { %>
                 <div class="ui-field-contain">
                     <label for="ets-parameter-<%= p.name %>">
-                        <%=!_.isUndefined(p.label) ? label : v2.beautifyNerdyStr(p.name) %>
-                        <span class="question" help="Optional parameter. <%= p.translation %>"> ?</span>
+                        <%=!_.isUndefined(p.label) ? p.label : v2.beautifyNerdyStr(p.name) %>
+                        <span class="question" help="[[#{l.Optional.Parameter}]]. <%= p.description %>" > ?</span>
                     </label>
+                    <% if(p.type=='boolean') { %>
+                    <select class="ets-parameter" id="ets-parameter-<%= p.name %>" name="<%= p.name %>">
+                        <option value="false" <%= p.defaultValue==false ? 'selected' :  '' %> >[[#{l.false}]]</option>
+                        <option value="true" <%= p.defaultValue==true ? 'selected' :  '' %> >[[#{l.true}]]</option>
+                    </select>
+                    <% } else { %>
                     <input type="text" class="ets-parameter" id="ets-parameter-<%= p.name %>" name="<%= p.name %>"
-                           title="<%= p.description %>"
+                           title="[[#{l.Optional.Parameter}]]. <%= p.description %>"
                            pattern="<%= p.allowedValues %>"
-                           value="<%- p.defaultValue %>"/>
+                           value="<%= p.defaultValue %>"/>
+                    <% } %>
                 </div>
                 <% }); %>
         </div>
@@ -287,7 +301,7 @@
     <!-- ]]> -->
 </script>
 
-<div tiles:fragment="start-tests-page" id="monitor-test-run-dialog" data-role="dialog" data-title="Monitor Test Run" th:data-title="#{l.Monitor.Test.Run}">
+<div tiles:fragment="start-tests-page" id="monitor-test-run-dialog" data-role="dialog" data-title="Monitor Test Run" th:attr="data-title=#{l.Monitor.Test.Run}">
     <div data-role="header" role="banner">
         <h2 th:text="#{l.Monitor.Test.Run}">Monitor Test Run</h2>
     </div>

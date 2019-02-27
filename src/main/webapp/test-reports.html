@@ -21,7 +21,7 @@
 </head>
 <body>
 
-<div tiles:fragment="test-reports-page" id="test-reports-page" data-role="page" data-title="Test Reports">
+<div tiles:fragment="test-reports-page" id="test-reports-page" data-role="page" data-title="Test Reports" th:attr="data-title=#{l.Testreports}">
     <div tiles:include="header">
         <!-- Header -->
     </div>
@@ -30,7 +30,7 @@
             <h2 th:text="#{l.Testreports}">Testreports</h2>
             <p th:if="${maxTestRunLifetime}" th:text="#{l.Testreports.note.expire( ${maxTestRunLifetime} )}"></p>
             <ul id="test-report-item-listview-container" data-role="listview" data-inset="true" data-autodividers="true"
-                class="ui-listview-outer" data-filter="true" data-filter-placeholder="Filter Test Reports...">
+                class="ui-listview-outer" data-filter="true" data-filter-placeholder="Filter Test Reports..." th:attr="data-filter-placeholder=#{l.Filter.Test.Reports}">
                 <!-- Container for template -->
             </ul>
     </div>
