@@ -614,7 +614,7 @@ public class TestRunController implements TestRunEventListener {
             throw new LocalizableApiError(result.getFieldError());
         }
 
-        testRunRequest.inject(dataStorageService);
+        testRunRequest.inject(testObjectController, dataStorageService);
         startTestRun(testRunRequest, request, response);
     }
 }

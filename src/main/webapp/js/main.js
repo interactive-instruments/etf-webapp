@@ -27,12 +27,6 @@ require.config( {
             "lib/jquery.mobile.min"
         ],
 
-        "jquery.validate": [
-            "https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min",
-            "https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min",
-            "lib/jquery.validate.min"
-        ],
-
         "underscore": [
             "https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min",
             "https://cdn.jsdelivr.net/npm/lodash@4.17.4/lodash.min",
@@ -79,9 +73,6 @@ require.config( {
             'https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.js': 'sha384-XEn4bZ9g8ia7KJWyaf3o/ADO5s2pqwtDl1MdxgCZ9x6rm5QICw5Zk2+vwIJnAeFD',
             'https://ajax.aspnetcdn.com/ajax/jquery.mobile/1.4.5/jquery.mobile-1.4.5.min.js': 'sha384-u7i0wHEdsFrw92D1Z0sk2r6kiOGnZJhnawPUT0he8TRKfD4/XMEsj22l/cHFXO3v',
 
-            'https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js': 'sha384-Fnqn3nxp3506LP/7Y3j/25BlWeA3PXTyT1l78LjECcPaKCV12TsZP7yyMxOe/G/k',
-            'https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min.js': 'sha384-Fnqn3nxp3506LP/7Y3j/25BlWeA3PXTyT1l78LjECcPaKCV12TsZP7yyMxOe/G/k',
-
             'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js': 'sha384-FwbQ7A+X0UT99MG4WBjhZHvU0lvi67zmsIYxAREyhabGDXt1x0jDiwi3xubEYDYw',
             'https://cdn.jsdelivr.net/npm/lodash@4.17.4/lodash.min.js': 'sha384-zIRexRVB5q09c7QIwaG/PJmsn9EPaqP3V9wNSk3XSC2hU6ns+hMorBODGGcKRnbz',
 
@@ -96,7 +87,6 @@ require.config( {
             'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min.js': 'sha256-yNbKY1y6h2rbVcQtf0b8lq4a+xpktyFc3pSYoGAY1qQ=',
 
             'https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.14.2/js/jquery.iframe-transport.min.js': 'sha256-OiZnRAga/nDE1Ud8eLfBWCwb9mMZmkrRIRblCeRYWj8=',
-
             'https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.14.2/js/jquery.fileupload.min.js': 'sha256-tcXzqklRDpmITiQ0Ff+S6H2uUQl089oXkEyGjOOGmN4='
         };
         var jsPos = path.indexOf('js/');
