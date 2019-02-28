@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.interactive_instruments.etf.dal.dao.PreparedDtoResolver;
+import de.interactive_instruments.etf.dal.dto.Dto;
 import de.interactive_instruments.etf.dal.dto.IncompleteDtoException;
 import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectDto;
 import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectTypeDto;
@@ -111,6 +112,15 @@ public class CreateTestRunTemplateRequest {
 
     public CreateTestRunTemplateRequest() {}
 
+    private <V extends Dto> List<V> getByIds(PreparedDtoResolver<V> resolver, final String[] eids)
+            throws ObjectWithIdNotFoundException, StorageException {
+        final List<V> items = new ArrayList<>();
+        for (int i = 0; i < eids.length; i++) {
+            items.add(resolver.getById(EidConverter.toEid(eids[i])).getDto());
+        }
+        return items;
+    }
+
     public TestRunTemplateDto toTestRunTemplate()
             throws LocalizableApiError, StorageException, IncompleteDtoException {
 
@@ -119,21 +129,21 @@ public class CreateTestRunTemplateRequest {
         if (testObjectIds != null && testObjectIds.length > 0) {
             try {
                 testRunTemplate.setTestObjects(
-                        testObjectResolver.getByIds(idStrsToEIDs(testObjectIds)).asList());
+                        getByIds(testObjectResolver, testObjectIds));
             } catch (ObjectWithIdNotFoundException e) {
                 throw new LocalizableApiError(e);
             }
         }
         final List<ExecutableTestSuiteDto> executableTestSuites;
         try {
-            executableTestSuites = etsResolver.getByIds(idStrsToEIDs(executableTestSuiteIds)).asList();
+            executableTestSuites = getByIds(etsResolver, executableTestSuiteIds);
         } catch (ObjectWithIdNotFoundException e) {
             throw new LocalizableApiError(e);
         }
         if (testObjectTypeIds != null && testObjectTypeIds.length > 0) {
             try {
                 testRunTemplate.setSupportedTestObjectTypes(
-                        testObjectTypeResolver.getByIds(idStrsToEIDs(testObjectTypeIds)).asList());
+                        getByIds(testObjectTypeResolver, testObjectTypeIds));
             } catch (ObjectWithIdNotFoundException e) {
                 throw new LocalizableApiError(e);
             }
