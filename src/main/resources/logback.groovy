@@ -89,6 +89,9 @@ static detApplicationWebServerDir() {
         appWebServerDir = PropertyUtils.getenvOrProperty("CATALINA_HOME", null)
     }
     if(appWebServerDir==null) {
+        appWebServerDir = PropertyUtils.getenvOrProperty("CATALINA_BASE", null)
+    }
+    if(appWebServerDir==null) {
         appWebServerDir = PropertyUtils.getenvOrProperty("JETTY_HOME", null)
     }
     return appWebServerDir
