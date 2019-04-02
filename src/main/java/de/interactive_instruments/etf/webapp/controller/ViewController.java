@@ -25,14 +25,16 @@ import static de.interactive_instruments.etf.webapp.controller.EtfConfigControll
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.joda.time.Period;
+import org.joda.time.PeriodType;
+import org.joda.time.format.PeriodFormat;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import de.interactive_instruments.exceptions.StorageException;
 import de.interactive_instruments.exceptions.config.ConfigurationException;
 
 /**
@@ -48,17 +50,17 @@ public class ViewController {
     EtfConfigController configController;
 
     @RequestMapping(value = {"/", "/etf", "/index.html"}, method = RequestMethod.GET)
-    public String overview(Model model) throws StorageException, ConfigurationException {
+    public String overview(Model model) throws ConfigurationException {
         testRunController.addMetaData(model);
         model.addAttribute("maxUploadSizeHr", FileUtils.byteCountToDisplaySize(
                 configController.getPropertyAsLong(ETF_MAX_UPLOAD_SIZE)));
         model.addAttribute("maxUploadSize",
                 configController.getPropertyAsLong(ETF_MAX_UPLOAD_SIZE));
-
         final long reportExp = configController.getPropertyAsLong(ETF_TESTREPORTS_LIFETIME_EXPIRATION);
         if (reportExp > 0) {
+            final Period period = new Period(TimeUnit.MINUTES.toMillis(reportExp));
             model.addAttribute("maxTestRunLifetime",
-                    DurationFormatUtils.formatDurationWords(TimeUnit.MINUTES.toMillis(reportExp), true, true));
+                    PeriodFormat.wordBased(LocaleContextHolder.getLocale()).print(period.normalizedStandard()));
         }
         return "etf";
     }

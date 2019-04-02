@@ -396,7 +396,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
         testObject.properties().setProperty("files", String.valueOf(v.getFileCount()));
         testObject.properties().setProperty("size", String.valueOf(v.getSize()));
         testObject.properties().setProperty("sizeHR", FileUtils.byteCountToDisplayRoundedSize(v.getSize(),
-            2, LocaleContextHolder.getLocale()));
+                2, LocaleContextHolder.getLocale()));
         if (v.getSkippedFiles() > 0) {
             testObject.properties().setProperty("skippedFiles", String.valueOf(v.getSkippedFiles()));
         }
