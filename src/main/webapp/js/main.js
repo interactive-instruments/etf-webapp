@@ -51,14 +51,14 @@ require.config( {
             "lib/toastr.min"
         ],
         "jquery.iframe-transport": [
-            "https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.14.2/js/jquery.iframe-transport.min",
+            "https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.28.0/js/jquery.iframe-transport.min",
             "lib/jquery.iframe-transport.min"
         ],
         "jquery-ui/ui/widget": [
             "lib/jquery.ui.widget"
         ],
         "jquery.fileupload": [
-            "https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.14.2/js/jquery.fileupload.min",
+            "https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.28.0/js/jquery.fileupload.min",
             "lib/jquery.fileupload.min"
         ],
         "etf.webui": [
@@ -86,8 +86,8 @@ require.config( {
 
             'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min.js': 'sha256-yNbKY1y6h2rbVcQtf0b8lq4a+xpktyFc3pSYoGAY1qQ=',
 
-            'https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.14.2/js/jquery.iframe-transport.min.js': 'sha256-OiZnRAga/nDE1Ud8eLfBWCwb9mMZmkrRIRblCeRYWj8=',
-            'https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.14.2/js/jquery.fileupload.min.js': 'sha256-tcXzqklRDpmITiQ0Ff+S6H2uUQl089oXkEyGjOOGmN4='
+            'https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.28.0/js/jquery.iframe-transport.min.js': 'sha384-7kOV/RzPaIaLacfvbwe/cjj4/1kekqkFKX538nlnt1yJQMqHpOJaabou8pZDsqVO',
+            'https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.28.0/js/jquery.fileupload.min.js': 'sha384-ktm5CYsTlQ2eBmFPwrpbH+Ik2ktsL2auWT+sLlxhKNFMQBAgyUEIQRTVvZUB2Nal'
         };
         var jsPos = path.indexOf('js/');
         var sri = sri[path];
