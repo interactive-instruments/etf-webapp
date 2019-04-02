@@ -143,6 +143,7 @@ define([
             if(!this.serviceTest) {
                 this.fileUpload = $('#fileupload');
                 this.fileUpload.empty();
+                var autoStart = false;
                 this.fileUpload.fileupload({
                     dataType: 'json',
                     url: v2.baseUrl + '/TestObjects?action=upload',
@@ -180,10 +181,14 @@ define([
                                 toastr.success("Uploaded "+data.jqXHR.responseJSON.files.length+" file",
                                     "Upload completed", {timeOut: 4500, extendedTimeOut: 20000});
                             }
+                            if(autoStart) {
+                                $('#start-tests-confirm').trigger('click');
+                            }
                         }else{
                             _this.testObjectCallbackId=null;
                             $('#start-tests-confirm').addClass('ui-disabled');
                             $('#fileupload').removeClass('ui-disabled');
+                            $('#fileupload-progress-info').hide();
                             v2.apiCallError("", "Upload failed",data);
                         }
                     },
@@ -191,6 +196,8 @@ define([
                         // hide start button + file upload
                         $('#start-tests-confirm').addClass('ui-disabled');
                         $('#fileupload').addClass('ui-disabled');
+                        $('#fileupload-progress-info').hide();
+                        autoStart = false;
                         toastr.info("Upload started","", {timeOut: 1700, extendedTimeOut: 4500})
                         $("#fileupload-progress").show("slow");
                     },
@@ -199,6 +206,8 @@ define([
                         _this.testObjectCallbackId=null;
                         $('#start-tests-confirm').addClass('ui-disabled');
                         $('#fileupload').removeClass('ui-disabled');
+                        $('#fileupload-progress-info').hide();
+                        autoStart = false;
                         v2.apiCallError("", "Upload failed",data);
                     },
                     progressall: function (e, data) {
@@ -209,6 +218,15 @@ define([
                         );
                         if(progress>=100) {
                             $.mobile.loading( "show" );
+                        }
+
+                        var secondsRemaining = (data.total - data.loaded) * 8 / data.bitrate;
+                        if(secondsRemaining>100 && secondsRemaining>0) {
+                            var duration = moment.duration(secondsRemaining, 'seconds');
+                            var remaining = duration.humanize(true);
+                            $('#fileupload-progress-info').show();
+                            $('#fileupload-progress-info-remaining').text(' '+remaining);
+                            autoStart = true;
                         }
                     }
                 });
