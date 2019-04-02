@@ -8,6 +8,10 @@ requirejs.onError = function (err) {
     throw err;
 };
 
+var locale = ((navigator.languages && navigator.languages.length) ? navigator.languages[0] : navigator.userLanguage
+    || navigator.language || navigator.browserLanguage || 'en').substring(0, 2);
+
+
 require.config( {
     paths: {
         baseUrl: 'js',
@@ -42,10 +46,17 @@ require.config( {
             "lib/backbone.paginator.min"
         ],
         "moment": [
-            "https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment.min",
-            "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min",
+            "https://cdn.jsdelivr.net/npm/moment@2.24.0/min/moment.min",
+            "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min",
             "lib/momemt.min"
         ],
+
+        "moment.locale": [
+            "https://cdn.jsdelivr.net/npm/moment@2.24.0/locale/"+locale,
+            "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/"+locale,
+            "lib/moment.locale.en"
+        ],
+
         "toastr": [
             "https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min",
             "lib/toastr.min"
@@ -65,6 +76,11 @@ require.config( {
             "app"
         ],
     },
+    map: {
+        '*': {
+            "../moment": "moment"
+        }
+    },
     onNodeCreated: function(node, config, module, path) {
         var sri = {
             'https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.3.min.js': 'sha384-6ePHh72Rl3hKio4HiJ841psfsRJveeS+aLoaEf3BWfS+gTF0XdAqku2ka8VddikM',
@@ -81,8 +97,23 @@ require.config( {
 
             'https://cdnjs.cloudflare.com/ajax/libs/backbone.paginator/2.0.5/backbone.paginator.min.js': 'sha256-nqCLeI27BiuRxhJEcsKPwUpTusAzME+5qFOWntHhAvy6',
 
-            'https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment.min.js': 'sha384-sIzeKWIAHvT0Vm8QbfLCqZwBG0WMCkWVAOYd/330YSNeeQ1Y57N3T9lQz5Ry/EHH',
-            'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js': 'sha384-KgEy7s3ThYKule8wWiu2WJkm0AmJeSLkXku5PY5X8MhVgdm8K1ebsVRKHfNfWPrR',
+            'https://cdn.jsdelivr.net/npm/moment@2.24.0/min/moment.min.js': 'sha384-fYxN7HsDOBRo1wT/NSZ0LkoNlcXvpDpFy6WzB42LxuKAX7sBwgo7vuins+E1HCaw',
+            'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js': 'sha384-fYxN7HsDOBRo1wT/NSZ0LkoNlcXvpDpFy6WzB42LxuKAX7sBwgo7vuins+E1HCaw',
+
+            'https://cdn.jsdelivr.net/npm/moment@2.24.0/locale/de.js': 'sha384-u4vVudBaVphJuXJ5BskWwV2AvgqjVmlTn09LZ2TAABA7UBHbGTp88ZK0/ZHkyAnX',
+            'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/de.js': 'sha384-u4vVudBaVphJuXJ5BskWwV2AvgqjVmlTn09LZ2TAABA7UBHbGTp88ZK0/ZHkyAnX',
+
+            'https://cdn.jsdelivr.net/npm/moment@2.24.0/locale/fr.js': 'sha384-3FwcuGMawv/mFO8kXToMwqRL3Zo2DEwdA2OFneqE7qQgBH+aAlacqr/XVZnSKhdB',
+            'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/fr.js': 'sha384-3FwcuGMawv/mFO8kXToMwqRL3Zo2DEwdA2OFneqE7qQgBH+aAlacqr/XVZnSKhdB',
+
+            'https://cdn.jsdelivr.net/npm/moment@2.24.0/locale/nl.js': 'sha384-A+2nDIC4M+umioIYsDOMZ6ZEFk4C8SOaiFTd6AdcPyRORVuPkIuKJQtYlsV3hQXO',
+            'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/nl.js': 'sha384-A+2nDIC4M+umioIYsDOMZ6ZEFk4C8SOaiFTd6AdcPyRORVuPkIuKJQtYlsV3hQXO',
+
+            'https://cdn.jsdelivr.net/npm/moment@2.24.0/locale/es.js': 'sha384-1qAUeyS6EIOskM+UWGhJh3qUqepgvqXZ12P6NiY/UiUeeaHSLMAKMyRpJ3gd4vTG',
+            'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/es.js': 'sha384-1qAUeyS6EIOskM+UWGhJh3qUqepgvqXZ12P6NiY/UiUeeaHSLMAKMyRpJ3gd4vTG',
+
+            'https://cdn.jsdelivr.net/npm/moment@2.24.0/locale/cs.js': 'sha384-+kucl+Uluan4CpizG7eBtjnqyT9Wt2xcnLyBXwwtxx+ytiURuKJ9cn9JUCNjynyb',
+            'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/cs.js': 'sha384-+kucl+Uluan4CpizG7eBtjnqyT9Wt2xcnLyBXwwtxx+ytiURuKJ9cn9JUCNjynyb',
 
             'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.3/toastr.min.js': 'sha256-yNbKY1y6h2rbVcQtf0b8lq4a+xpktyFc3pSYoGAY1qQ=',
 
@@ -109,6 +140,7 @@ require.config( {
             "deps": [ "underscore", "jquery" ],
             "exports": "Backbone"
         },
+
         'backbone-paginator': {
             deps: ['backbone']
         },
@@ -162,5 +194,24 @@ require([
         this.router = new Mobile();
 
     });
-
 });
+
+if(['de', 'fr', 'nl', 'es', 'cs'].indexOf(locale)!==-1) {
+    require.config( {
+        paths: {
+            baseUrl: 'js',
+            "moment.locale": [
+                "https://cdn.jsdelivr.net/npm/moment@2.24.0/locale/"+locale,
+                "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/"+locale
+            ],
+        },
+        map: {
+            '*': {
+                "../moment": "moment"
+            }
+        }
+    });
+    define(['moment', 'moment.locale'], function (moment) {
+        moment.locale(locale);
+    });
+}
