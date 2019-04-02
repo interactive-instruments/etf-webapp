@@ -162,6 +162,9 @@
         <div style="padding-top: 0.4em" id="fileupload-progress" class="ii-progress">
             <div class="ii-progress-bar"></div>
         </div>
+        <div id="fileupload-progress-info" style="display: none;">
+            <span th:text="#{l.upload.huge.file}">l.upload.huge.file</span>
+            <span id="fileupload-progress-info-remaining"></span></div>
         <a id="show-selected-executable-test-suites-button" data-inline="true"
            data-role="button" data-icon="eye" data-iconpos="right" href="#" >Test Suites</a>
         <a id="show-credentials-button" data-inline="true"
