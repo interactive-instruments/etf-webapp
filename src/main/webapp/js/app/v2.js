@@ -47,8 +47,33 @@ define(['toastr'], function (toastr) {
         blurWarn(element, 4000);
     }
 
+    function UnexpectedError(message){
+        this.message=message;
+        this.name="Unexpected error";
+    }
+
+    UnexpectedError.prototype.toString = function () {
+        return this.name + ': "' + this.message + '"';
+    }
+
+    function UnexpectedApiCallError(message, title, xhr){
+        this.title=title;
+        this.message=message;
+        this.xhr=xhr;
+        this.name="Unexpected API call error";
+    }
+
+    UnexpectedApiCallError.prototype.toString = function () {
+        return this.name + ': "' + this.title + '", "'+this.message+'", "'+this.xhr+'"';
+    }
+
     function unexpectedError(error) {
-        // https://github.com/etf-validator/etf-webapp/issues/155
+        if (error === null) {
+            throw new Error("Unexpected error");
+        }else if( (typeof error === 'function') || (typeof error === 'object') ) {
+            throw error;
+        }
+        throw new UnexpectedError(error);
     }
 
     function apiCallError(message, title, xhr) {
@@ -82,10 +107,15 @@ define(['toastr'], function (toastr) {
             }
         }else if(xhr.status==0) {
             errorMesg="Please check the internet connection to the service.";
+        }else if(xhr.messages!=0) {
+            // error message from JQuery file upload
+            errorMesg=Object.values(xhr.messages)[0];
         }else if(!_.isUndefined(xhr.xhr) && !_.isUndefined(xhr.xhr.responseText)) {
             console.error(xhr.responseText);
+            unexpectedError(new UnexpectedApiCallError(message, title, xhr));
         }else{
             console.error(xhr);
+            unexpectedError(new UnexpectedApiCallError(message, title, xhr));
         }
         toastr.error(message+errorMesg, title, {timeOut: 0, extendedTimeOut: 0});
     }
