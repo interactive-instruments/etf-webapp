@@ -43,12 +43,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
@@ -395,7 +395,8 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
         testObject.properties().setProperty("indexed", "false");
         testObject.properties().setProperty("files", String.valueOf(v.getFileCount()));
         testObject.properties().setProperty("size", String.valueOf(v.getSize()));
-        testObject.properties().setProperty("sizeHR", FileUtils.byteCountToDisplaySize(v.getSize()));
+        testObject.properties().setProperty("sizeHR", FileUtils.byteCountToDisplayRoundedSize(v.getSize(),
+            2, LocaleContextHolder.getLocale()));
         if (v.getSkippedFiles() > 0) {
             testObject.properties().setProperty("skippedFiles", String.valueOf(v.getSkippedFiles()));
         }
