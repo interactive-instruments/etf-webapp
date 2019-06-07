@@ -224,7 +224,7 @@ class FileStorage {
                 tmpFile.delete();
                 multipartFile.transferTo(tmpFile);
                 prepare(tmpFile, destinationSubDir, multipartFile.getOriginalFilename(), fileFilter, remainingDownloadSize);
-                remainingDownloadSize -= FileUtils.sizeOfDirectory(destinationSubDir);
+                remainingDownloadSize = maxStorageSize - FileUtils.sizeOfDirectory(destinationSubDir);
             }
         }
     }
