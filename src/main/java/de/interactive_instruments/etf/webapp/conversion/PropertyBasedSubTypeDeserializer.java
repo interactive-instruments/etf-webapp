@@ -20,14 +20,10 @@
 package de.interactive_instruments.etf.webapp.conversion;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.*;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -39,31 +35,40 @@ import de.interactive_instruments.SUtils;
  */
 public class PropertyBasedSubTypeDeserializer<T> extends StdDeserializer<T> {
 
-    private final Map<String, Class<? extends T>> propertyMappings = new HashMap<>();
+    private final List<String> uniqueIdentifiers = new ArrayList<>();
+    private final List<Class<? extends T>> classes = new ArrayList<>();
 
     PropertyBasedSubTypeDeserializer(final Class<T> clazz) {
         super(clazz);
     }
 
     void register(final Class<? extends T> clazz, final String uniqueProperty) {
-        propertyMappings.put(uniqueProperty, clazz);
+        uniqueIdentifiers.add(uniqueProperty);
+        classes.add(clazz);
     }
 
     @Override
     public T deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException {
-
         final ObjectMapper mapper = (ObjectMapper) jp.getCodec();
         final ObjectNode obj = mapper.readTree(jp);
-        final Iterator<Entry<String, JsonNode>> elementsIterator = obj.fields();
-        Class<? extends T> clazz = null;
-        while (elementsIterator.hasNext() && clazz == null) {
-            clazz = propertyMappings.get(elementsIterator.next().getKey());
+        int pos = -1;
+        for (int i = 0, uniqueIdentifiersSize = uniqueIdentifiers.size(); i < uniqueIdentifiersSize; i++) {
+            if (obj.has(uniqueIdentifiers.get(i))) {
+                if (pos > -1) {
+                    throw ctxt.mappingException("Polymorphic deserialization failed. "
+                            + "Several properties were provided although only one of '"
+                            + SUtils.concatStr(", ", uniqueIdentifiers) + "' was expected.");
+                }
+                pos = i;
+            }
         }
-        if (clazz == null) {
-            throw ctxt.mappingException("Polymorphic deserialization failed. Expected one property of " +
-                    SUtils.concatStr(", ", propertyMappings.keySet()));
+
+        if (pos == -1) {
+            throw ctxt.mappingException("Polymorphic deserialization failed. "
+                    + "Expected exactly one property of '" + SUtils.concatStr(", ", uniqueIdentifiers) + "'");
         }
-        return mapper.treeToValue(obj, clazz);
+
+        return mapper.treeToValue(obj, classes.get(pos));
     }
 
 }

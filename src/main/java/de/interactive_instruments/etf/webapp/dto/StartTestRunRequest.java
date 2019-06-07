@@ -50,7 +50,8 @@ import io.swagger.annotations.ApiModelProperty;
 @JsonPropertyOrder({
         "label",
         "executableTestSuiteIds",
-        "arguments"
+        "arguments",
+        "testObject"
 })
 @ApiModel(value = "StartTestRunRequest", description = "Start a test run")
 public class StartTestRunRequest extends AbstractTestRunRequest {
@@ -76,7 +77,7 @@ public class StartTestRunRequest extends AbstractTestRunRequest {
             + "See Test Object model for more information and the Implementation Notes for an complete example.", required = true)
     @JsonProperty(required = true)
     @NotNull(message = "{l.json.invalid.test.object}")
-    private SimpleTestObject testObject;
+    private UseTestObjectCmd testObject;
 
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
@@ -90,7 +91,7 @@ public class StartTestRunRequest extends AbstractTestRunRequest {
     public StartTestRunRequest() {}
 
     public StartTestRunRequest(final String label, final List<String> executableTestSuiteIds,
-            SimpleArguments arguments, final SimpleTestObject testObject,
+            SimpleArguments arguments, final UseTestObjectCmd testObject,
             final Map<String, Object> additionalProperties) {
         this.label = label;
         this.executableTestSuiteIds = executableTestSuiteIds;

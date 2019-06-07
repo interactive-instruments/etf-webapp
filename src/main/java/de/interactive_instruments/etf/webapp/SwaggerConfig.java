@@ -31,6 +31,7 @@ import springfox.documentation.service.Contact;
 import springfox.documentation.service.Tag;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger.web.*;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import de.interactive_instruments.etf.webapp.controller.EtfConfigController;
@@ -64,7 +65,7 @@ public class SwaggerConfig {
     public final static String TEST_RESULTS_TAG_NAME = "5. Test Run Results";
     private final static Tag testResultsTag = new Tag(TEST_RESULTS_TAG_NAME, "Retrieve test results");
 
-    private ApiInfo apiInfo() {
+    private ApiInfo v2Info() {
         return new ApiInfoBuilder()
                 .title("ETF Web API")
                 .description(
@@ -83,7 +84,7 @@ public class SwaggerConfig {
                                 + "[Back to user interface]("
                                 + EtfConfigController.getInstance().getProperty(EtfConfigController.ETF_WEBAPP_BASE_URL)
                                 + "/#home)")
-                .contact(new Contact("ETF Team", "http://www.etf-validator.net",
+                .contact(new Contact("ETF", "https://www.etf-validator.net",
                         "etf@interactive-instruments.de"))
                 .license("European Public License 1.2")
                 .licenseUrl("https://joinup.ec.europa.eu/page/eupl-text-11-12")
@@ -92,19 +93,34 @@ public class SwaggerConfig {
     }
 
     @Bean
-    public Docket etfApi() {
+    public Docket v2Api() {
         return new Docket(DocumentationType.SWAGGER_2)
-                .apiInfo(apiInfo())
+                .apiInfo(v2Info())
                 .select()
                 .apis(RequestHandlerSelectors.withMethodAnnotation(ApiOperation.class))
                 .paths(PathSelectors.any())
                 .build()
                 .pathMapping("/")
                 .tags(statusTag, capabilitiesTag, testRunsTag, testObjectsTag, testResultsTag)
-                .useDefaultResponseMessages(false)
-        // .directModelSubstitute(LocalDate.class, String.class)
-        // .genericModelSubstitutes(ResponseEntity.class)
-        // .useDefaultResponseMessages(false)
-        ;
+                .useDefaultResponseMessages(false).groupName("ETF-v2");
+    }
+
+    @Bean
+    UiConfiguration uiConfig() {
+        return UiConfigurationBuilder.builder()
+                .deepLinking(true)
+                .displayOperationId(false)
+                .defaultModelsExpandDepth(-1)
+                .defaultModelExpandDepth(1)
+                .defaultModelRendering(ModelRendering.EXAMPLE)
+                .displayRequestDuration(false)
+                .docExpansion(DocExpansion.NONE)
+                .filter(false)
+                .maxDisplayedTags(5)
+                .operationsSorter(OperationsSorter.ALPHA)
+                .showExtensions(false)
+                .tagsSorter(TagsSorter.ALPHA)
+                .supportedSubmitMethods(UiConfiguration.Constants.DEFAULT_SUBMIT_METHODS)
+                .build();
     }
 }

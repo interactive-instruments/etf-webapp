@@ -19,9 +19,6 @@
  */
 package de.interactive_instruments.etf.webapp.dto;
 
-import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.TEST_RUN_LABEL_DESCRIPTION;
-import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.TEST_RUN_LABEL_EXAMPLE;
-
 import java.net.URI;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -72,11 +69,15 @@ public class CreateTestRunTemplateRequest {
 
     private final static Logger logger = LoggerFactory.getLogger(CreateTestRunTemplateRequest.class);
 
-    @ApiModelProperty(value = TEST_RUN_LABEL_DESCRIPTION
-            + " Mandatory.", example = TEST_RUN_LABEL_EXAMPLE, dataType = "String", required = true)
+    @ApiModelProperty(value = "A label for the Test Run Template. Mandatory.", example = "Conformity Class X", dataType = "String", required = true)
     @JsonProperty(required = true)
     @NotNull(message = "{l.enter.label}")
     private String label;
+
+    @ApiModelProperty(value = "A description for the Test Run Template. Mandatory.", example = "The Conformity Class X bundles all Test Suites that...", dataType = "String", required = true)
+    @JsonProperty(required = true)
+    @NotNull(message = "{l.enter.description}")
+    private String description;
 
     @ApiModelProperty(position = 1, value = "Additional meta information as key value pairs."
             + " See Implementation Notes for an complete example.")
@@ -206,6 +207,7 @@ public class CreateTestRunTemplateRequest {
         testRunTemplate.setCreationDateNowIfNotSet();
 
         testRunTemplate.setLabel(label);
+        testRunTemplate.setDescription(description);
         testRunTemplate.setItemHash(testRunTemplate.toString());
         testRunTemplate.setId(EidFactory.getDefault().createRandomId());
         testRunTemplate.setVersionFromStr("1.0.0");

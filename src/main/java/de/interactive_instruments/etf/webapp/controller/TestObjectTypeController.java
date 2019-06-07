@@ -23,7 +23,6 @@ import static de.interactive_instruments.etf.webapp.SwaggerConfig.SERVICE_CAP_TA
 import static de.interactive_instruments.etf.webapp.dto.DocumentationConstants.*;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
@@ -35,20 +34,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import de.interactive_instruments.Credentials;
-import de.interactive_instruments.UriUtils;
 import de.interactive_instruments.etf.component.loaders.LoadingContext;
 import de.interactive_instruments.etf.dal.dao.*;
-import de.interactive_instruments.etf.dal.dto.capabilities.ResourceDto;
-import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectDto;
 import de.interactive_instruments.etf.dal.dto.capabilities.TestObjectTypeDto;
-import de.interactive_instruments.etf.detector.DetectedTestObjectType;
-import de.interactive_instruments.etf.detector.IncompatibleTestObjectTypeException;
 import de.interactive_instruments.etf.detector.TestObjectTypeDetectorManager;
-import de.interactive_instruments.etf.detector.TestObjectTypeNotDetected;
 import de.interactive_instruments.etf.model.EID;
 import de.interactive_instruments.etf.model.EidMap;
-import de.interactive_instruments.etf.model.capabilities.Resource;
 import de.interactive_instruments.etf.webapp.WebAppConstants;
 import de.interactive_instruments.etf.webapp.helpers.SimpleFilter;
 import de.interactive_instruments.exceptions.ObjectWithIdNotFoundException;
@@ -106,34 +97,6 @@ public class TestObjectTypeController implements PreparedDtoResolver<TestObjectT
     public PreparedDtoCollection<TestObjectTypeDto> getByIds(final Set<EID> id, final Filter filter)
             throws StorageException, ObjectWithIdNotFoundException {
         return testObjectTypeDao.getByIds(id, filter);
-    }
-
-    public void checkAndResolveTypes(final TestObjectDto dto, final Set<EID> expectedTypes)
-            throws IOException, LocalizableApiError,
-            ObjectWithIdNotFoundException {
-        // First resource is the main resource
-        final ResourceDto resourceDto = dto.getResourceCollection().iterator().next();
-        final Resource resource = Resource.create(resourceDto.getName(),
-                resourceDto.getUri(), Credentials.fromProperties(dto.properties()));
-        final DetectedTestObjectType detectedTestObjectType;
-        try {
-            detectedTestObjectType = TestObjectTypeDetectorManager.detect(resource, expectedTypes);
-        } catch (final TestObjectTypeNotDetected e) {
-            throw new LocalizableApiError(e);
-        } catch (IncompatibleTestObjectTypeException e) {
-            throw new LocalizableApiError(e);
-        }
-        detectedTestObjectType.enrichAndNormalize(dto);
-        if (!UriUtils.isFile(resourceDto.getUri())) {
-            // service URI
-            dto.setRemoteResource(resourceDto.getUri());
-        } else {
-            // fallback download URI
-            final URI downloadUri = dto.getResourceByName("data");
-            if (downloadUri != null && !UriUtils.isFile(downloadUri)) {
-                dto.setRemoteResource(downloadUri);
-            }
-        }
     }
 
     //

@@ -50,7 +50,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @author Jon Herrmann ( herrmann aT interactive-instruments doT de )
  */
 @ApiModel(value = "TestObject", description = "Simplified Test Object definition")
-public class SimpleTestObject {
+public class UseTestObjectCmd {
 
     @ApiModelProperty(value = EID_DESCRIPTION + ". " +
             "Either an id or a resource property must be provided.", example = EID_EXAMPLE, dataType = "String")
@@ -92,11 +92,7 @@ public class SimpleTestObject {
         return password;
     }
 
-    public SimpleTestObject() {}
-
-    public SimpleTestObject(final TestObjectDto testObject) {
-        this.id = testObject.getId().getId();
-    }
+    public UseTestObjectCmd() {}
 
     public TestObjectDto toTestObject(final PreparedDtoResolver<TestObjectDto> testObjectDao)
             throws URISyntaxException, IOException, ObjectWithIdNotFoundException {
@@ -109,7 +105,6 @@ public class SimpleTestObject {
             testObject.properties().setProperty("temporary", "true");
             testObject.setVersionFromStr("1.0.0");
             testObject.setCreationDateNowIfNotSet();
-            // testObject.setRemoteResource(URI.create("http://private"));
             testObject.setLocalPath(".");
             final Credentials credentials;
             if (!SUtils.isNullOrEmpty(username)) {
@@ -126,7 +121,7 @@ public class SimpleTestObject {
                         testObject.getResourceCollection().iterator().next().getUri(), credentials, true);
                 testObject.setLabel(tmpLabel);
             } else {
-                testObject.setLabel("Temporary Test Object");
+                testObject.setLabel("Ad hoc Test Object");
             }
         } else {
             testObject = testObjectDao.getById(

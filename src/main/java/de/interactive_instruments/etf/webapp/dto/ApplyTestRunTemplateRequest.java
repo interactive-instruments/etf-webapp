@@ -82,7 +82,7 @@ public class ApplyTestRunTemplateRequest extends AbstractTestRunRequest {
             + " Test Object definition which references a resource in the web."
             + " See Test Object model for more information and the Implementation Notes for an complete example.")
     @JsonProperty
-    private SimpleTestObject testObject;
+    private UseTestObjectCmd testObject;
 
     @JsonIgnore
     private PreparedDtoResolver<TestRunTemplateDto> testRunTemplateResolver;
@@ -94,7 +94,7 @@ public class ApplyTestRunTemplateRequest extends AbstractTestRunRequest {
 
     public ApplyTestRunTemplateRequest(final String label,
             final SimpleArguments arguments,
-            final SimpleTestObject testObject) {
+            final UseTestObjectCmd testObject) {
         this.label = label;
         this.arguments = arguments;
         this.testObject = testObject;

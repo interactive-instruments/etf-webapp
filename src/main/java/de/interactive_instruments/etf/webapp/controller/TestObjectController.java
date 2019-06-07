@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
@@ -39,7 +40,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBException;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
@@ -68,8 +69,9 @@ import de.interactive_instruments.etf.model.OutputFormat;
 import de.interactive_instruments.etf.webapp.WebAppConstants;
 import de.interactive_instruments.etf.webapp.conversion.EidConverter;
 import de.interactive_instruments.etf.webapp.dto.ApiError;
-import de.interactive_instruments.etf.webapp.dto.SimpleTestObject;
+import de.interactive_instruments.etf.webapp.dto.CreateReusableTestObjectRequest;
 import de.interactive_instruments.etf.webapp.dto.TObjectValidator;
+import de.interactive_instruments.etf.webapp.dto.TestObjectCreationResponse;
 import de.interactive_instruments.etf.webapp.helpers.SimpleFilter;
 import de.interactive_instruments.etf.webapp.helpers.User;
 import de.interactive_instruments.etf.webapp.helpers.View;
@@ -100,14 +102,17 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
     private StreamingService streaming;
 
     @Autowired
-    private TestObjectTypeController testObjectTypeController;
+    private TestObjectTypeDetectionService testObjectTypeDetectionService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private Timer cleanTimer;
     // 7 minutes after start
     private final long initialDelay = 420000;
 
     public static final String PATH = "testobjects";
-    private final static String TESTOBJECTS_URL = WebAppConstants.API_BASE_URL + "/TestObjects";
+    public final static String TESTOBJECTS_URL = WebAppConstants.API_BASE_URL + "/TestObjects";
     // 7 minutes for adding resources
     private static final long T_CREATION_WINDOW = 7;
     private IFile testDataDir;
@@ -429,7 +434,7 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
                 testObject.setAuthor("unknown");
             }
         }
-        testObjectTypeController.checkAndResolveTypes(testObject, supportedTestObjectTypes);
+        testObjectTypeDetectionService.checkAndResolveTypes(testObject, supportedTestObjectTypes);
         // otherwise it contains all required types.
 
         testObject.setVersionFromStr("1.0.0");
@@ -550,103 +555,88 @@ public class TestObjectController implements PreparedDtoResolver<TestObjectDto> 
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @ApiModel(value = "TestObjectUpload", description = "Test Object Upload response")
-    static class TestObjectUpload {
-        static class UploadMetadata {
-            @ApiModelProperty(value = "File name", example = "file.xml")
-            @JsonProperty
-            private final String name;
-            @ApiModelProperty(value = "File size in bytes", example = "2048")
-            @JsonProperty
-            private final String size;
-            @ApiModelProperty(value = "File type", example = "text/xml")
-            @JsonProperty
-            private final String type;
-
-            private UploadMetadata(final String fileName, final long fileSize, final String fileType) {
-                this.name = fileName;
-                // this.size = FileUtils.byteCountToDisplaySize(fileSize);
-                this.size = String.valueOf(fileSize);
-                this.type = fileType;
-            }
-        }
-
-        @JsonProperty
-        private final SimpleTestObject testObject;
-
-        @JsonProperty
-        private final List<UploadMetadata> files;
-
-        String getNameForUpload() {
-            if (files.size() == 1) {
-                return files.get(0).name;
-            } else if (files.size() == 2) {
-                return files.get(0).name + " and " + files.get(1).name;
-            } else if (files.size() > 2) {
-                return files.get(0).name + " and " + (files.size() - 1) + " other files";
-            } else {
-                return "Empty Upload";
-            }
-        }
-
-        TestObjectUpload(final TestObjectDto testObject, final Collection<List<MultipartFile>> multipartFiles) {
-            this.testObject = new SimpleTestObject(testObject);
-            this.files = new ArrayList<>();
-            for (final List<MultipartFile> multipartFile : multipartFiles) {
-                for (final MultipartFile mpf : multipartFile) {
-                    this.files.add(
-                            new UploadMetadata(IFile.sanitize(mpf.getOriginalFilename()), mpf.getSize(), mpf.getContentType()));
-                }
-            }
-        }
-    }
-
-    @ApiOperation(value = "Upload a file for the Test Object using a MULTIPART upload request", notes = "On success the service will internally create a TEMPORARY new Test Object and "
-            + "return it's ID which afterwards can be used to start a new Test Run. "
-            + "If the Test Object ID is not used within 5 minutes, the Test Object and all uploaded data will be deleted automatically. "
-            + "PLEASE NOTE: This interface will create a TEMPORARY Test Object that will not be persisted as long as it is not used in a Test Run. "
+    @ApiOperation(value = "Create a new Test Object", notes = "Based on whether a test object is specified with the "
+            + "'testobject' property, the service will either create a reusable Test Object with the provided properties or "
+            + "create a TEMPORARY Test Object which can be used for one Test Run."
+            + "On success the service will return it's ID which afterwards can be used to start a new Test Run. "
+            + "If the ID of a temporary Test Object is not used within 5 minutes, the Test Object and all uploaded data will "
+            + "be deleted automatically. "
+            + "PLEASE NOTE: A TEMPORARY Test Object will not be persisted as long as it is not used in a Test Run. "
             + "A TEMPORARY Test Object can not be retrieved or deleted but can only be referenced from a 'Test Run Request' to start a new Test Run. "
             + "The property 'data.downloadable' of a TEMPORARY Test Object is always set to true. "
             + "Also note that the Swagger UI does only allow single file uploads in contrast to the API which allows multi file uploads.",
 
-            tags = {
-                    TEST_OBJECTS_TAG_NAME}, produces = "application/json")
+            tags = {TEST_OBJECTS_TAG_NAME}, consumes = "multipart/form-data", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "fileupload", required = true, dataType = "file", paramType = "form"),
+            @ApiImplicitParam(name = "fileupload", dataType = "__file", paramType = "form"),
+            @ApiImplicitParam(name = "testobject", dataType = "object", dataTypeClass = CreateReusableTestObjectRequest.class, paramType = "form"),
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "File uploaded and temporary Test Object created", response = TestObjectUpload.class),
-            @ApiResponse(code = 400, message = "File upload failed", response = ApiError.class),
+            @ApiResponse(code = 200, message = "Test Object created", response = TestObjectCreationResponse.class),
+            @ApiResponse(code = 400, message = "Test Object creation failed", response = ApiError.class),
             @ApiResponse(code = 413, message = "Uploaded test data are too large", response = ApiError.class)
     })
-    @RequestMapping(value = {TESTOBJECTS_URL}, params = "action=upload", method = RequestMethod.POST)
-    public TestObjectUpload uploadData(
+    @RequestMapping(value = {TESTOBJECTS_URL}, method = RequestMethod.POST, consumes = "multipart/form-data")
+    public TestObjectCreationResponse uploadData(
             @ApiIgnore final MultipartHttpServletRequest request)
-            throws LocalizableApiError, InvalidPropertyException, ObjectWithIdNotFoundException {
+            throws LocalizableApiError, InvalidPropertyException, ObjectWithIdNotFoundException, IOException {
 
-        statusController.ensureStatusNotMajor();
+        final TestObjectCreationResponse testObjectUploadResponse;
+        // there seems to be no way to solve this reasonably with annotations..
+        final String testObjectStr = request.getParameter("testobject");
+        if (!SUtils.isNullOrEmpty(testObjectStr) && testObjectStr.length() > 3) {
+            testObjectUploadResponse = createReusableTestObject(request);
+        } else {
+            statusController.ensureStatusNotMajor();
+            testObjectUploadResponse = createAdHocTestObject(request);
+        }
+        return testObjectUploadResponse;
+    }
 
+    private TestObjectCreationResponse createAdHocTestObject(final MultipartHttpServletRequest request)
+            throws InvalidPropertyException, ObjectWithIdNotFoundException {
         final TestObjectDto testObject = new TestObjectDto();
-        testObject.setId(EidFactory.getDefault().createRandomId());
+        testObject.properties().setProperty("temporary", "true");
+        final TestObjectCreationResponse testObjectUploadResponse = createAndDetectTestObject(request, testObject);
+        this.transientTestObjects.put(testObject.getId(), testObject);
+        testObject.setLabel(testObjectUploadResponse.getNameForUpload());
+        return testObjectUploadResponse;
+    }
 
+    private TestObjectCreationResponse createReusableTestObject(final MultipartHttpServletRequest request)
+            throws IOException, ObjectWithIdNotFoundException, InvalidPropertyException {
+        final String testObjectStr = request.getParameter("testobject");
+        final CreateReusableTestObjectRequest testObjectRequest = objectMapper.readValue(testObjectStr,
+                CreateReusableTestObjectRequest.class);
+
+        final TestObjectDto testObject;
+        try {
+            testObject = testObjectRequest.toTestObject();
+        } catch (URISyntaxException e) {
+            throw new LocalizableApiError(e);
+        }
+        final TestObjectCreationResponse testObjectUploadResponse = createAndDetectTestObject(request, testObject);
+        testObjectDao.add(testObject);
+        return testObjectUploadResponse;
+    }
+
+    private TestObjectCreationResponse createAndDetectTestObject(final MultipartHttpServletRequest request,
+            final TestObjectDto testObject)
+            throws InvalidPropertyException, ObjectWithIdNotFoundException {
+        testObject.setId(EidFactory.getDefault().createRandomId());
         try {
             // Create from upload
             createWithFileResources(testObject, request.getMultiFileMap().values());
 
-            testObjectTypeController.checkAndResolveTypes(testObject, null);
+            testObjectTypeDetectionService.checkAndResolveTypes(testObject, null);
         } catch (StorageException e) {
             throw new LocalizableApiError(e);
         } catch (IOException e) {
             throw new LocalizableApiError(e);
         }
-
         testObject.setLastUpdateDateNow();
         testObject.setLastEditor(User.getUser(request));
-
-        this.transientTestObjects.put(testObject.getId(), testObject);
-        final TestObjectUpload testObjectUpload = new TestObjectUpload(testObject, request.getMultiFileMap().values());
-        testObject.setLabel(testObjectUpload.getNameForUpload());
-        return testObjectUpload;
+        return new TestObjectCreationResponse(testObject, request.getMultiFileMap().values());
     }
 
     @ApiOperation(value = "Get all Test Object resources", notes = "Download the resources of the Test Object."

@@ -32,6 +32,9 @@ public class DocumentationConstants {
     public final static String TEST_RUN_LABEL_DESCRIPTION = "A label for the test run.";
     public final static String TEST_RUN_LABEL_EXAMPLE = "Test run on 15:00 - 01.01.2017 with Conformance classes X,Y and Z";
 
+    public final static String TEST_OBJECT_LABEL_DESCRIPTION = "A label for the test object.";
+    public final static String TEST_OBJECT_LABEL_EXAMPLE = "Partial delivery of spatial data";
+
     public final static String TEST_TASK_DESCRIPTION = "A Test Task bundles exactly one Executable Test Suite which is executed "
             + "against exactly one Test Object with a set of user specified arguments.";
 

@@ -128,11 +128,6 @@ public class TestDriverController implements PreparedDtoResolver<ExecutableTestS
                 logger.info("Loaded Test Driver {} - {} ({})", componentInfo.getName(),
                         componentInfo.getVersion(), componentInfo.getId());
             }
-            if (getExecutableTestSuites().size() == 0) {
-                logger.warn("No Executable Test Suites loaded");
-            } else {
-                logger.info("{} Executable Test Suites loaded", getExecutableTestSuites().size());
-            }
         }
     }
 

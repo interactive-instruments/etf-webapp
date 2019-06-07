@@ -140,7 +140,7 @@ public class TestRunTemplateController implements PreparedDtoResolver<TestRunTem
     public void listTestRunTemplatesJson(
             @ApiParam(value = OFFSET_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int offset,
             @ApiParam(value = LIMIT_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") int limit,
-            @ApiParam(value = FIELDS_DESCRIPTION) @RequestParam(required = false, defaultValue = "0") String fields,
+            @ApiParam(value = FIELDS_DESCRIPTION) @RequestParam(required = false, defaultValue = "*") String fields,
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         streaming.asJson2(testRunTemplateDao, request, response, SimpleFilter.filterItems(offset, limit, fields));
@@ -198,8 +198,9 @@ public class TestRunTemplateController implements PreparedDtoResolver<TestRunTem
             + " If more than one Executable Test Suites is specified, then there must be at least one"
             + " Test Object Type that is supported by all Executable Test Suites."
             + " If a fixed Test Object is provided its type must of course also be supported."
-            + " Specifying the test object is optional and if it was specified when the template was created, it can no longer"
-            + " be overwritten. Otherwise, the test object must be specified if the template is applied."
+            + " Specifying the test object is optional. If the test object is not specified when the template is created, "
+            + " it must be specified when the template is applied. Otherwise, the test object cannot be overwritten "
+            + " after it has been specified in the template."
             + " Arguments for the template are automatically taken from all Executable Test Suites."
             + " If there are Parameters with the same name but different default values"
             + " in two Executable Test Suites, these must be explicitly overridden."
@@ -214,8 +215,8 @@ public class TestRunTemplateController implements PreparedDtoResolver<TestRunTem
             + "            \"tests_to_execute\": \".*\"\n"
             + "        },\n"
             + "        \"executableTestSuiteIds\": [\n"
-            + "            \"ec7323d5-d8f0-4cfe-b23a-b826df86d58c\",\n"
-            + "            \"9a31ecfc-6673-43c0-9a31-b4595fb53a98\"\n"
+            + "            \"EIDec7323d5-d8f0-4cfe-b23a-b826df86d58c\",\n"
+            + "            \"EID9a31ecfc-6673-43c0-9a31-b4595fb53a98\"\n"
             + "        ]\n"
             + "    }\n"
             + "\n\n"

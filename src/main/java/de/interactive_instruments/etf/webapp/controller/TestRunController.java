@@ -34,7 +34,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import javax.validation.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -519,7 +519,7 @@ public class TestRunController implements TestRunEventListener {
             + "            \"tests_to_execute\": \".*\"\n"
             + "        },\n"
             + "        \"testObject\": {\n"
-            + "            \"id\": \"b502260f-1054-432e-8cd5-4a61302dfdba\"\n"
+            + "            \"id\": \"EIDb502260f-1054-432e-8cd5-4a61302dfdba\"\n"
             + "        }\n"
             + "    }\n"
             + "\n\n"
@@ -609,6 +609,10 @@ public class TestRunController implements TestRunEventListener {
             HttpServletRequest request,
             HttpServletResponse response)
             throws LocalizableApiError, InvalidPropertyException {
+
+        final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        final Validator validator = factory.getValidator();
+        final Set<ConstraintViolation<AbstractTestRunRequest>> violations = validator.validate(testRunRequest);
 
         if (result.hasErrors()) {
             throw new LocalizableApiError(result.getFieldError());
